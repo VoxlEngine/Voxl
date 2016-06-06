@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../voxl-core/include/renderer/renderer.hpp
+
+../voxl-core/include/voxl.hpp
+vulkan/vulkan.h
+-
+
+/home/voxl/Voxl/voxl-core/src/renderer/renderer.cpp
+cstring
+-
+iostream
+-
+vector
+-
+vulkan/vulkan.h
+-
+voxl.hpp
+/home/voxl/Voxl/voxl-core/src/renderer/voxl.hpp
+renderer/renderer.hpp
+/home/voxl/Voxl/voxl-core/src/renderer/renderer/renderer.hpp
+

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libvoxl.a  CMakeFiles/voxl.dir/src/renderer/renderer.cpp.o
+/usr/bin/ranlib libvoxl.a
