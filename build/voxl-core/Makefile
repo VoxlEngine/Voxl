@@ -125,6 +125,114 @@ voxl/fast:
 	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/build
 .PHONY : voxl/fast
 
+src/math/mat4.o: src/math/mat4.cpp.o
+
+.PHONY : src/math/mat4.o
+
+# target to build an object file
+src/math/mat4.cpp.o:
+	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o
+.PHONY : src/math/mat4.cpp.o
+
+src/math/mat4.i: src/math/mat4.cpp.i
+
+.PHONY : src/math/mat4.i
+
+# target to preprocess a source file
+src/math/mat4.cpp.i:
+	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.i
+.PHONY : src/math/mat4.cpp.i
+
+src/math/mat4.s: src/math/mat4.cpp.s
+
+.PHONY : src/math/mat4.s
+
+# target to generate assembly for a file
+src/math/mat4.cpp.s:
+	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.s
+.PHONY : src/math/mat4.cpp.s
+
+src/math/vec2.o: src/math/vec2.cpp.o
+
+.PHONY : src/math/vec2.o
+
+# target to build an object file
+src/math/vec2.cpp.o:
+	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o
+.PHONY : src/math/vec2.cpp.o
+
+src/math/vec2.i: src/math/vec2.cpp.i
+
+.PHONY : src/math/vec2.i
+
+# target to preprocess a source file
+src/math/vec2.cpp.i:
+	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.i
+.PHONY : src/math/vec2.cpp.i
+
+src/math/vec2.s: src/math/vec2.cpp.s
+
+.PHONY : src/math/vec2.s
+
+# target to generate assembly for a file
+src/math/vec2.cpp.s:
+	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.s
+.PHONY : src/math/vec2.cpp.s
+
+src/math/vec3.o: src/math/vec3.cpp.o
+
+.PHONY : src/math/vec3.o
+
+# target to build an object file
+src/math/vec3.cpp.o:
+	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o
+.PHONY : src/math/vec3.cpp.o
+
+src/math/vec3.i: src/math/vec3.cpp.i
+
+.PHONY : src/math/vec3.i
+
+# target to preprocess a source file
+src/math/vec3.cpp.i:
+	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.i
+.PHONY : src/math/vec3.cpp.i
+
+src/math/vec3.s: src/math/vec3.cpp.s
+
+.PHONY : src/math/vec3.s
+
+# target to generate assembly for a file
+src/math/vec3.cpp.s:
+	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.s
+.PHONY : src/math/vec3.cpp.s
+
+src/math/vec4.o: src/math/vec4.cpp.o
+
+.PHONY : src/math/vec4.o
+
+# target to build an object file
+src/math/vec4.cpp.o:
+	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o
+.PHONY : src/math/vec4.cpp.o
+
+src/math/vec4.i: src/math/vec4.cpp.i
+
+.PHONY : src/math/vec4.i
+
+# target to preprocess a source file
+src/math/vec4.cpp.i:
+	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.i
+.PHONY : src/math/vec4.cpp.i
+
+src/math/vec4.s: src/math/vec4.cpp.s
+
+.PHONY : src/math/vec4.s
+
+# target to generate assembly for a file
+src/math/vec4.cpp.s:
+	cd /home/voxl/Voxl/build && $(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.s
+.PHONY : src/math/vec4.cpp.s
+
 src/renderer/renderer.o: src/renderer/renderer.cpp.o
 
 .PHONY : src/renderer/renderer.o
@@ -161,6 +269,18 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... voxl"
+	@echo "... src/math/mat4.o"
+	@echo "... src/math/mat4.i"
+	@echo "... src/math/mat4.s"
+	@echo "... src/math/vec2.o"
+	@echo "... src/math/vec2.i"
+	@echo "... src/math/vec2.s"
+	@echo "... src/math/vec3.o"
+	@echo "... src/math/vec3.i"
+	@echo "... src/math/vec3.s"
+	@echo "... src/math/vec4.o"
+	@echo "... src/math/vec4.i"
+	@echo "... src/math/vec4.s"
 	@echo "... src/renderer/renderer.o"
 	@echo "... src/renderer/renderer.i"
 	@echo "... src/renderer/renderer.s"

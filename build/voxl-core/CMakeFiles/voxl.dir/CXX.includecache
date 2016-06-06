@@ -6,11 +6,55 @@
 
 #IncludeRegexTransform: 
 
+../voxl-core/include/math/mat4.hpp
+types.hpp
+../voxl-core/include/math/types.hpp
+math/vec3.hpp
+../voxl-core/include/math/math/vec3.hpp
+math/vec4.hpp
+../voxl-core/include/math/math/vec4.hpp
+
+../voxl-core/include/math/vec2.hpp
+
+../voxl-core/include/math/vec3.hpp
+
+../voxl-core/include/math/vec4.hpp
+
 ../voxl-core/include/renderer/renderer.hpp
+
+../voxl-core/include/types.hpp
+stdint.h
+-
 
 ../voxl-core/include/voxl.hpp
 vulkan/vulkan.h
 -
+
+/home/voxl/Voxl/voxl-core/src/math/mat4.cpp
+iostream
+-
+math.h
+-
+math/mat4.hpp
+/home/voxl/Voxl/voxl-core/src/math/math/mat4.hpp
+
+/home/voxl/Voxl/voxl-core/src/math/vec2.cpp
+math.h
+-
+math/vec2.hpp
+/home/voxl/Voxl/voxl-core/src/math/math/vec2.hpp
+
+/home/voxl/Voxl/voxl-core/src/math/vec3.cpp
+math.h
+-
+math/vec3.hpp
+/home/voxl/Voxl/voxl-core/src/math/math/vec3.hpp
+
+/home/voxl/Voxl/voxl-core/src/math/vec4.cpp
+math.h
+-
+math/vec4.hpp
+/home/voxl/Voxl/voxl-core/src/math/math/vec4.hpp
 
 /home/voxl/Voxl/voxl-core/src/renderer/renderer.cpp
 cstring

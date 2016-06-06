@@ -57,9 +57,105 @@ include voxl-core/CMakeFiles/voxl.dir/progress.make
 # Include the compile flags for this target's objects.
 include voxl-core/CMakeFiles/voxl.dir/flags.make
 
+voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o: voxl-core/CMakeFiles/voxl.dir/flags.make
+voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o: ../voxl-core/src/math/mat4.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/voxl/Voxl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o"
+	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/voxl.dir/src/math/mat4.cpp.o -c /home/voxl/Voxl/voxl-core/src/math/mat4.cpp
+
+voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/voxl.dir/src/math/mat4.cpp.i"
+	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/voxl/Voxl/voxl-core/src/math/mat4.cpp > CMakeFiles/voxl.dir/src/math/mat4.cpp.i
+
+voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/voxl.dir/src/math/mat4.cpp.s"
+	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/voxl/Voxl/voxl-core/src/math/mat4.cpp -o CMakeFiles/voxl.dir/src/math/mat4.cpp.s
+
+voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o.requires:
+
+.PHONY : voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o.requires
+
+voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o.provides: voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o.requires
+	$(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o.provides.build
+.PHONY : voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o.provides
+
+voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o.provides.build: voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o
+
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o: voxl-core/CMakeFiles/voxl.dir/flags.make
+voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o: ../voxl-core/src/math/vec2.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/voxl/Voxl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o"
+	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/voxl.dir/src/math/vec2.cpp.o -c /home/voxl/Voxl/voxl-core/src/math/vec2.cpp
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/voxl.dir/src/math/vec2.cpp.i"
+	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/voxl/Voxl/voxl-core/src/math/vec2.cpp > CMakeFiles/voxl.dir/src/math/vec2.cpp.i
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/voxl.dir/src/math/vec2.cpp.s"
+	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/voxl/Voxl/voxl-core/src/math/vec2.cpp -o CMakeFiles/voxl.dir/src/math/vec2.cpp.s
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o.requires:
+
+.PHONY : voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o.requires
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o.provides: voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o.requires
+	$(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o.provides.build
+.PHONY : voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o.provides
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o.provides.build: voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o
+
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o: voxl-core/CMakeFiles/voxl.dir/flags.make
+voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o: ../voxl-core/src/math/vec3.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/voxl/Voxl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o"
+	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/voxl.dir/src/math/vec3.cpp.o -c /home/voxl/Voxl/voxl-core/src/math/vec3.cpp
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/voxl.dir/src/math/vec3.cpp.i"
+	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/voxl/Voxl/voxl-core/src/math/vec3.cpp > CMakeFiles/voxl.dir/src/math/vec3.cpp.i
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/voxl.dir/src/math/vec3.cpp.s"
+	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/voxl/Voxl/voxl-core/src/math/vec3.cpp -o CMakeFiles/voxl.dir/src/math/vec3.cpp.s
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o.requires:
+
+.PHONY : voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o.requires
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o.provides: voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o.requires
+	$(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o.provides.build
+.PHONY : voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o.provides
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o.provides.build: voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o
+
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o: voxl-core/CMakeFiles/voxl.dir/flags.make
+voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o: ../voxl-core/src/math/vec4.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/voxl/Voxl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o"
+	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/voxl.dir/src/math/vec4.cpp.o -c /home/voxl/Voxl/voxl-core/src/math/vec4.cpp
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/voxl.dir/src/math/vec4.cpp.i"
+	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/voxl/Voxl/voxl-core/src/math/vec4.cpp > CMakeFiles/voxl.dir/src/math/vec4.cpp.i
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/voxl.dir/src/math/vec4.cpp.s"
+	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/voxl/Voxl/voxl-core/src/math/vec4.cpp -o CMakeFiles/voxl.dir/src/math/vec4.cpp.s
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o.requires:
+
+.PHONY : voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o.requires
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o.provides: voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o.requires
+	$(MAKE) -f voxl-core/CMakeFiles/voxl.dir/build.make voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o.provides.build
+.PHONY : voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o.provides
+
+voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o.provides.build: voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o
+
+
 voxl-core/CMakeFiles/voxl.dir/src/renderer/renderer.cpp.o: voxl-core/CMakeFiles/voxl.dir/flags.make
 voxl-core/CMakeFiles/voxl.dir/src/renderer/renderer.cpp.o: ../voxl-core/src/renderer/renderer.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/voxl/Voxl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object voxl-core/CMakeFiles/voxl.dir/src/renderer/renderer.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/voxl/Voxl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object voxl-core/CMakeFiles/voxl.dir/src/renderer/renderer.cpp.o"
 	cd /home/voxl/Voxl/build/voxl-core && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/voxl.dir/src/renderer/renderer.cpp.o -c /home/voxl/Voxl/voxl-core/src/renderer/renderer.cpp
 
 voxl-core/CMakeFiles/voxl.dir/src/renderer/renderer.cpp.i: cmake_force
@@ -83,15 +179,23 @@ voxl-core/CMakeFiles/voxl.dir/src/renderer/renderer.cpp.o.provides.build: voxl-c
 
 # Object files for target voxl
 voxl_OBJECTS = \
+"CMakeFiles/voxl.dir/src/math/mat4.cpp.o" \
+"CMakeFiles/voxl.dir/src/math/vec2.cpp.o" \
+"CMakeFiles/voxl.dir/src/math/vec3.cpp.o" \
+"CMakeFiles/voxl.dir/src/math/vec4.cpp.o" \
 "CMakeFiles/voxl.dir/src/renderer/renderer.cpp.o"
 
 # External object files for target voxl
 voxl_EXTERNAL_OBJECTS =
 
+voxl-core/libvoxl.a: voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o
+voxl-core/libvoxl.a: voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o
+voxl-core/libvoxl.a: voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o
+voxl-core/libvoxl.a: voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o
 voxl-core/libvoxl.a: voxl-core/CMakeFiles/voxl.dir/src/renderer/renderer.cpp.o
 voxl-core/libvoxl.a: voxl-core/CMakeFiles/voxl.dir/build.make
 voxl-core/libvoxl.a: voxl-core/CMakeFiles/voxl.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/voxl/Voxl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libvoxl.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/voxl/Voxl/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX static library libvoxl.a"
 	cd /home/voxl/Voxl/build/voxl-core && $(CMAKE_COMMAND) -P CMakeFiles/voxl.dir/cmake_clean_target.cmake
 	cd /home/voxl/Voxl/build/voxl-core && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/voxl.dir/link.txt --verbose=$(VERBOSE)
 
@@ -100,6 +204,10 @@ voxl-core/CMakeFiles/voxl.dir/build: voxl-core/libvoxl.a
 
 .PHONY : voxl-core/CMakeFiles/voxl.dir/build
 
+voxl-core/CMakeFiles/voxl.dir/requires: voxl-core/CMakeFiles/voxl.dir/src/math/mat4.cpp.o.requires
+voxl-core/CMakeFiles/voxl.dir/requires: voxl-core/CMakeFiles/voxl.dir/src/math/vec2.cpp.o.requires
+voxl-core/CMakeFiles/voxl.dir/requires: voxl-core/CMakeFiles/voxl.dir/src/math/vec3.cpp.o.requires
+voxl-core/CMakeFiles/voxl.dir/requires: voxl-core/CMakeFiles/voxl.dir/src/math/vec4.cpp.o.requires
 voxl-core/CMakeFiles/voxl.dir/requires: voxl-core/CMakeFiles/voxl.dir/src/renderer/renderer.cpp.o.requires
 
 .PHONY : voxl-core/CMakeFiles/voxl.dir/requires
