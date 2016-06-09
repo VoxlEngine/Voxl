@@ -1,7 +1,6 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 #include "voxl.hpp"
 
@@ -11,6 +10,14 @@ namespace voxl {
 namespace renderer {
 Renderer::Renderer() {
   VkResult result;
+
+  std::vector<const char *> extensionNames;
+  extensionNames.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+  extensionNames.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#else
+  extensionNames.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
+#endif
 
   VkApplicationInfo appInfo;
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -30,8 +37,8 @@ Renderer::Renderer() {
   instanceInfo.pApplicationInfo = &appInfo;
   instanceInfo.enabledLayerCount = 0;
   instanceInfo.ppEnabledLayerNames = NULL;
-  instanceInfo.enabledExtensionCount = 0;
-  instanceInfo.ppEnabledExtensionNames = NULL;
+  instanceInfo.enabledExtensionCount = extensionNames.size();
+  instanceInfo.ppEnabledExtensionNames = &extensionNames[0];
 
   result = vkCreateInstance(&instanceInfo, NULL, &instance);
   if (result != VK_SUCCESS) {
@@ -72,6 +79,46 @@ Renderer::Renderer() {
               << (deviceProperties.apiVersion >> 22 & 0x3ff) << "."
               << (deviceProperties.apiVersion >> 12 & 0x3ff) << "."
               << (deviceProperties.apiVersion & 0xfff) << std::endl;
+  }
+
+  VkDeviceCreateInfo devCreateInfo;
+  devCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+  devCreateInfo.pNext = NULL;
+  devCreateInfo.flags = 0;
+
+  devCreateInfo.enabledLayerCount = 0;
+  devCreateInfo.ppEnabledLayerNames = NULL;
+  devCreateInfo.enabledExtensionCount = 0;
+  devCreateInfo.ppEnabledExtensionNames = NULL;
+  devCreateInfo.pEnabledFeatures = NULL;
+
+  VkDeviceQueueCreateInfo devQueueInfo;
+  devQueueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+  devQueueInfo.pNext = NULL;
+  devQueueInfo.flags = 0;
+  devQueueInfo.queueFamilyIndex = 0;
+
+  float queuePriorities[] = {1.0f};
+  devQueueInfo.queueCount = 1;
+  devQueueInfo.pQueuePriorities = queuePriorities;
+
+  devCreateInfo.queueCreateInfoCount = 1;
+  devCreateInfo.pQueueCreateInfos = &devQueueInfo;
+
+  result = vkCreateDevice(physicalDevices[0], &devCreateInfo, NULL, &dev);
+  if (result != VK_SUCCESS) {
+    std::cout << "Unabled to create Vulkan device" << std::endl;
+    std::cout << result;
+  }
+
+  VkSurfaceKHR surf;
+  VkXcbSurfaceCreateInfoKHR surfCreateInfo;
+  surfCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+  surfCreateInfo.pNext = NULL;
+  surfCreateInfo.flags = 0;
+  result = vkCreateXcbSurfaceKHR(instance, &surfCreateInfo, NULL, &surf);
+  if (result != VK_SUCCESS) {
+    std::cout << "Unable to create window" << std::endl;
   }
 }
 Renderer::~Renderer() { vkDestroyInstance(instance, NULL); }

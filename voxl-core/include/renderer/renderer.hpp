@@ -10,6 +10,7 @@ public:
 
 private:
   VkInstance instance;
+  VkDevice dev;
 };
 }
 }

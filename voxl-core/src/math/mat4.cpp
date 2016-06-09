@@ -18,9 +18,11 @@ mat4::mat4(float diagonal) {
 
 mat4 mat4::operator*(mat4 &other) {
   mat4 ret(0.0f);
+
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
       float sum = 0;
+
       for (int k = 0; k < 4; k++) {
         sum += get(j, k) * other.get(k, i);
       }
@@ -32,17 +34,21 @@ mat4 mat4::operator*(mat4 &other) {
 
 vec4 mat4::operator*(vec4 &other) {
   vec4 ret(0.0f, 0.0f, 0.0f, 0.0f);
+
   for (int i = 0; i < 4; i++) {
     float sum = 0;
     sum += get(i, 0) * other.x;
     sum += get(i, 1) * other.y;
     sum += get(i, 2) * other.z;
     sum += get(i, 3) * other.w;
+
     switch (i) {
     case 0:
       ret.x = sum;
+
     case 1:
       ret.y = sum;
+
     case 2:
       ret.z = sum;
     }

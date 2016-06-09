@@ -12,9 +12,11 @@ class mat4 {
 public:
   mat4(float diagonal);
 
-  inline float get(uint i, uint j) { return elements[i + j * 4]; };
-  inline float *getElements() { return elements; };
-  inline void set(uint i, uint j, float val) { elements[i + j * 4] = val; };
+  inline float get(uint i, uint j) { return elements[i + j * 4]; }
+
+  inline float *getElements() { return elements; }
+
+  inline void set(uint i, uint j, float val) { elements[i + j * 4] = val; }
 
   mat4 operator*(mat4 &other);
   vec4 operator*(vec4 &other);

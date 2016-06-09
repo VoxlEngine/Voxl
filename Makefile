@@ -1,6 +1,6 @@
 all:
 	@test -s build || { mkdir -p build && cd build && cmake ..; }
-	@cd build && $(MAKE)
+	@cd build && $(MAKE) example
 	@build/example/example
 
 clean:
