@@ -5,4 +5,5 @@ add_library(voxl
   src/math/vec2.cpp
   src/math/vec3.cpp
   src/math/vec4.cpp
-  src/renderer/renderer.cpp)
+  src/renderer/renderer.cpp
+  src/game.cpp)

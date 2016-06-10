@@ -2,28 +2,30 @@
 #include <iostream>
 #include <vector>
 
-#include "voxl.hpp"
-
 #include "renderer/renderer.hpp"
 
 namespace voxl {
 namespace renderer {
-Renderer::Renderer() {
+Renderer::Renderer(Config config) {
   VkResult result;
 
-  std::vector<const char *> extensionNames;
-  extensionNames.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-#ifdef VK_USE_PLATFORM_WIN32_KHR
-  extensionNames.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-#else
-  extensionNames.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
-#endif
+  if (!glfwInit()) {
+    std::cout << "Unable to initialize GLFW" << std::endl;
+  }
+
+  if (!glfwVulkanSupported()) {
+    std::cout << "GLFW does not support Vulkan" << std::endl;
+  }
+
+  uint32_t numExtensions = 0;
+  const char **extensionNames =
+      glfwGetRequiredInstanceExtensions(&numExtensions);
 
   VkApplicationInfo appInfo;
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   appInfo.pNext = NULL;
   // TODO: Use application name
-  appInfo.pApplicationName = NULL;
+  appInfo.pApplicationName = config.windowTitle;
   appInfo.pEngineName = ENGINE_NAME;
   appInfo.engineVersion = VK_MAKE_VERSION(
       VOXL_VERSION_MAJOR, VOXL_VERSION_MINOR, VOXL_VERSION_PATCH);
@@ -37,8 +39,8 @@ Renderer::Renderer() {
   instanceInfo.pApplicationInfo = &appInfo;
   instanceInfo.enabledLayerCount = 0;
   instanceInfo.ppEnabledLayerNames = NULL;
-  instanceInfo.enabledExtensionCount = extensionNames.size();
-  instanceInfo.ppEnabledExtensionNames = &extensionNames[0];
+  instanceInfo.enabledExtensionCount = numExtensions;
+  instanceInfo.ppEnabledExtensionNames = extensionNames;
 
   result = vkCreateInstance(&instanceInfo, NULL, &instance);
   if (result != VK_SUCCESS) {
@@ -111,14 +113,13 @@ Renderer::Renderer() {
     std::cout << result;
   }
 
-  VkSurfaceKHR surf;
-  VkXcbSurfaceCreateInfoKHR surfCreateInfo;
-  surfCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-  surfCreateInfo.pNext = NULL;
-  surfCreateInfo.flags = 0;
-  result = vkCreateXcbSurfaceKHR(instance, &surfCreateInfo, NULL, &surf);
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+  window = glfwCreateWindow(config.windowWidth, config.windowHeight,
+                            config.windowTitle, NULL, NULL);
+
+  result = glfwCreateWindowSurface(instance, window, NULL, &surf);
   if (result != VK_SUCCESS) {
-    std::cout << "Unable to create window" << std::endl;
+    std::cout << "Unable to create window Vulkan surface" << std::endl;
   }
 }
 Renderer::~Renderer() { vkDestroyInstance(instance, NULL); }
