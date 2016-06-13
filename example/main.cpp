@@ -6,7 +6,7 @@
 #include <game.hpp>
 
 using namespace voxl;
-using namespace voxl::renderer;
+using namespace voxl::graphics;
 
 int main() {
   Config config;

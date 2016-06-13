@@ -15,6 +15,4 @@
 #define VOXL_ANDROID
 #endif
 
-#define ENGINE_NAME "Voxl"
-
 #endif

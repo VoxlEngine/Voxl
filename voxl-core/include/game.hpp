@@ -2,7 +2,7 @@
 #define VOXL_GAME_H_
 
 #include "config.hpp"
-#include "renderer/renderer.hpp"
+#include "graphics/renderer.hpp"
 
 namespace voxl {
 class Game {
@@ -12,7 +12,7 @@ public:
   void start();
 
 private:
-  renderer::Renderer renderer;
+  graphics::Renderer renderer;
 };
 }
 

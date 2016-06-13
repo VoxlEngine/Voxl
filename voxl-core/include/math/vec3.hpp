@@ -3,31 +3,31 @@
 
 namespace voxl {
 namespace math {
-class vec3 {
+class Vec3 {
 public:
-  vec3();
-  vec3(float xCoord, float yCoord, float zCoord);
+  Vec3();
+  Vec3(float xCoord, float yCoord, float zCoord);
 
   float x, y, z;
 
-  vec3 operator+(const float &scalar);
-  vec3 operator-(const float &scalar);
+  Vec3 operator+(const float &scalar);
+  Vec3 operator-(const float &scalar);
 
-  vec3 operator+(const vec3 &other);
-  vec3 operator-(const vec3 &other);
+  Vec3 operator+(const Vec3 &other);
+  Vec3 operator-(const Vec3 &other);
 
-  vec3 operator*(const float &scalar);
-  vec3 operator/(const float &scalar);
+  Vec3 operator*(const float &scalar);
+  Vec3 operator/(const float &scalar);
 
-  vec3 operator*(const vec3 &other);
-  vec3 operator/(const vec3 &other);
+  Vec3 operator*(const Vec3 &other);
+  Vec3 operator/(const Vec3 &other);
 
-  float distance();
-  float dot(vec3 &other);
-  vec3 cross(vec3 &other);
-  vec3 negate();
-  vec3 normalize();
-  static vec3 normalize(vec3 vec);
+  float Distance();
+  float Dot(Vec3 &other);
+  Vec3 Cross(Vec3 &other);
+  Vec3 Negate();
+  Vec3 Normalize();
+  static Vec3 Normalize(Vec3 vec);
 };
 }
 }

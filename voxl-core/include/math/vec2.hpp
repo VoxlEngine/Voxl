@@ -3,28 +3,28 @@
 
 namespace voxl {
 namespace math {
-class vec2 {
+class Vec2 {
 public:
-  vec2();
-  vec2(float xCoord, float yCoord);
+  Vec2();
+  Vec2(float xCoord, float yCoord);
 
   float x, y;
 
-  vec2 operator+(const float &scalar);
-  vec2 operator-(const float &scalar);
+  Vec2 operator+(const float &scalar);
+  Vec2 operator-(const float &scalar);
 
-  vec2 operator+(const vec2 &other);
-  vec2 operator-(const vec2 &other);
+  Vec2 operator+(const Vec2 &other);
+  Vec2 operator-(const Vec2 &other);
 
-  vec2 operator*(const float &scalar);
-  vec2 operator/(const float &scalar);
+  Vec2 operator*(const float &scalar);
+  Vec2 operator/(const float &scalar);
 
-  vec2 operator*(const vec2 &other);
-  vec2 operator/(const vec2 &other);
+  Vec2 operator*(const Vec2 &other);
+  Vec2 operator/(const Vec2 &other);
 
-  float distance();
-  float dot(vec2 &other);
-  vec2 negate();
+  float Distance();
+  float Dot(Vec2 &other);
+  Vec2 Negate();
 };
 }
 }

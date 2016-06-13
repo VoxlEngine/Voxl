@@ -8,33 +8,31 @@
 
 namespace voxl {
 namespace math {
-class mat4 {
+class Mat4 {
 public:
-  mat4(float diagonal);
+  Mat4(float diagonal);
 
-  inline float get(uint i, uint j) { return elements[i + j * 4]; }
+  inline float Get(uint i, uint j) { return elements[i + j * 4]; };
+  inline float *GetElements() { return elements; };
+  inline void Set(uint i, uint j, float val) { elements[i + j * 4] = val; };
 
-  inline float *getElements() { return elements; }
+  Mat4 operator*(Mat4 &other);
+  Vec4 operator*(Vec4 &other);
+  void operator*=(Mat4 &other);
 
-  inline void set(uint i, uint j, float val) { elements[i + j * 4] = val; }
+  static Mat4 Translate(Vec3 delta);
 
-  mat4 operator*(mat4 &other);
-  vec4 operator*(vec4 &other);
-  void operator*=(mat4 &other);
+  static Mat4 RotateX(float radians);
+  static Mat4 RotateY(float radians);
+  static Mat4 RotateZ(float radians);
 
-  static mat4 translate(vec3 delta);
+  static Mat4 LookAt(Vec3 right, Vec3 up, Vec3 dir, Vec3 pos);
 
-  static mat4 rotateX(float radians);
-  static mat4 rotateY(float radians);
-  static mat4 rotateZ(float radians);
-
-  static mat4 lookAt(vec3 right, vec3 up, vec3 dir, vec3 pos);
-
-  static mat4 ortho(float left, float right, float bottom, float top,
+  static Mat4 Ortho(float left, float right, float bottom, float top,
                     float near, float far);
-  static mat4 persp(float fov, float aspectRatio, float near, float far);
+  static Mat4 Persp(float fov, float aspectRatio, float near, float far);
 
-  void print();
+  void Print();
 
 private:
   float elements[16];
