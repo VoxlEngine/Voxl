@@ -5,7 +5,7 @@
 #include <GLFW/glfw3.h>
 
 #include "config.hpp"
-#include "graphics/graphics_context.hpp"
+#include "graphics/vulkan/vulkancontext.hpp"
 
 namespace voxl {
 namespace graphics {
@@ -16,10 +16,10 @@ public:
 
   void Update();
 
-  inline GLFWwindow *getWindow() { return graphicsContext.window; };
+  inline GLFWwindow *getWindow() { return vulkanContext.window; };
 
 private:
-  GraphicsContext graphicsContext;
+  vulkan::VulkanContext vulkanContext;
 };
 }
 }

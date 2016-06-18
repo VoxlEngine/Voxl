@@ -5,6 +5,6 @@ add_library(voxl
   src/math/vec2.cpp
   src/math/vec3.cpp
   src/math/vec4.cpp
-  src/graphics/graphics_context.cpp
+  src/graphics/vulkan/vulkancontext.cpp
   src/graphics/renderer.cpp
   src/game.cpp)

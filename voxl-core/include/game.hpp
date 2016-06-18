@@ -1,6 +1,8 @@
 #ifndef VOXL_GAME_H_
 #define VOXL_GAME_H_
 
+#include "voxl.hpp"
+
 #include "config.hpp"
 #include "graphics/renderer.hpp"
 

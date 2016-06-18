@@ -2,22 +2,25 @@
 #include <iostream>
 #include <vector>
 
-#include "graphics/graphics_context.hpp"
+#include "graphics/vulkan/vulkancontext.hpp"
 
 namespace voxl {
 namespace graphics {
-// TODO: Add quit on error (possibly move to function instead of constructor?)
-int GraphicsContext::Init(Config config) {
+namespace vulkan {
+// TODO: Separate into different functions and allow swapchain recreation on
+// resize
+bool VulkanContext::Init(Config config) {
+  ready = false;
   // Initialize GLFW
   if (!glfwInit()) {
     std::cout << "Unable to initialize GLFW" << std::endl;
-    return -1;
+    return false;
   }
 
   // Check if GLFW supports Vulkan
   if (!glfwVulkanSupported()) {
     std::cout << "GLFW does not support Vulkan" << std::endl;
-    return -1;
+    return false;
   }
 
   uint32_t numExtensions = 0;
@@ -45,10 +48,9 @@ int GraphicsContext::Init(Config config) {
   instanceCreateInfo.ppEnabledExtensionNames = extensionNames;
 
   // Create instance
-
   if (vkCreateInstance(&instanceCreateInfo, NULL, &instance) != VK_SUCCESS) {
     std::cout << "Unable to create Vulkan instance: Error code " << std::endl;
-    return -1;
+    return false;
   }
 
   // Enumerate physical devices (GPUs)
@@ -56,19 +58,19 @@ int GraphicsContext::Init(Config config) {
 
   if (vkEnumeratePhysicalDevices(instance, &physDevCount, NULL) != VK_SUCCESS) {
     std::cout << "Unable to query number of GPUs" << std::endl;
-    return -1;
+    return false;
   }
 
   if (physDevCount == 0) {
     std::cout << "No compatilble Vulkan GPU" << std::endl;
-    return -1;
+    return false;
   }
 
   std::vector<VkPhysicalDevice> physDevs(physDevCount);
   if (vkEnumeratePhysicalDevices(instance, &physDevCount, &physDevs[0]) !=
       VK_SUCCESS) {
     std::cout << "Unable to get list of GPUs" << std::endl;
-    return -1;
+    return false;
   }
 
   // Print physical device info
@@ -105,8 +107,8 @@ int GraphicsContext::Init(Config config) {
   // TODO: Support separate graphics and present queues
 
   // Get a queue with support for both graphics and present
-  uint32_t graphicsQueueIndex = UINT32_MAX;
-  uint32_t presentQueueIndex = UINT32_MAX;
+  graphicsQueueIndex = UINT32_MAX;
+  presentQueueIndex = UINT32_MAX;
   for (uint32_t i = 0; i < queueFamilyCount; i++) {
     if (familyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
       if (graphicsQueueIndex == UINT32_MAX)
@@ -122,6 +124,7 @@ int GraphicsContext::Init(Config config) {
   if (graphicsQueueIndex == UINT32_MAX || presentQueueIndex == UINT32_MAX) {
     std::cout << "Unable to find queue which supports both present and graphics"
               << std::endl;
+    return false;
   }
 
   // Create queues
@@ -152,7 +155,7 @@ int GraphicsContext::Init(Config config) {
 
   if (vkCreateDevice(physDevs[0], &devCreateInfo, NULL, &dev) != VK_SUCCESS) {
     std::cout << "Unabled to create Vulkan device" << std::endl;
-    return -1;
+    return false;
   }
 
   // Get queues
@@ -161,6 +164,7 @@ int GraphicsContext::Init(Config config) {
 
   // Create window
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   window = glfwCreateWindow(config.windowWidth, config.windowHeight,
                             config.windowTitle, NULL, NULL);
 
@@ -171,7 +175,7 @@ int GraphicsContext::Init(Config config) {
   // Create surface
   if (glfwCreateWindowSurface(instance, window, NULL, &surf) != VK_SUCCESS) {
     std::cout << "Unable to create window Vulkan surface" << std::endl;
-    return -1;
+    return false;
   }
 
   // Get surface capabilities
@@ -179,7 +183,7 @@ int GraphicsContext::Init(Config config) {
   if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
           physDevs[0], surf, &surfCapabilities) != VK_SUCCESS) {
     std::cout << "Unable to get device surface capabilities" << std::endl;
-    return -1;
+    return false;
   }
 
   // Get supported formats
@@ -187,14 +191,14 @@ int GraphicsContext::Init(Config config) {
   if (vkGetPhysicalDeviceSurfaceFormatsKHR(physDevs[0], surf, &formatCount,
                                            NULL) != VK_SUCCESS) {
     std::cout << "Unable to get device surface formats" << std::endl;
-    return -1;
+    return false;
   }
 
   std::vector<VkSurfaceFormatKHR> formats(formatCount);
   if (vkGetPhysicalDeviceSurfaceFormatsKHR(physDevs[0], surf, &formatCount,
                                            &formats[0]) != VK_SUCCESS) {
     std::cout << "Unable to get device surface formats" << std::endl;
-    return -1;
+    return false;
   }
 
   // Select best format
@@ -208,7 +212,7 @@ int GraphicsContext::Init(Config config) {
   } else {
     std::cout << "Device surface does not support any color format"
               << std::endl;
-    return -1;
+    return false;
   }
 
   // Get swap chain image count
@@ -225,7 +229,7 @@ int GraphicsContext::Init(Config config) {
         VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
   } else {
     std::cout << "Swap chain transfer DST not supported" << std::endl;
-    return -1;
+    return false;
   }
 
   // Get present modes
@@ -234,7 +238,7 @@ int GraphicsContext::Init(Config config) {
           physDevs[0], surf, &presentModeCount, NULL) != VK_SUCCESS ||
       presentModeCount == 0) {
     std::cout << "Unable to get device surface present modes" << std::endl;
-    return -1;
+    return false;
   }
 
   std::vector<VkPresentModeKHR> presentModes(presentModeCount);
@@ -243,7 +247,7 @@ int GraphicsContext::Init(Config config) {
           physDevs[0], surf, &presentModeCount, &presentModes[0]) !=
       VK_SUCCESS) {
     std::cout << "Unable to get device surface present modes" << std::endl;
-    return -1;
+    return false;
   }
 
   VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
@@ -265,20 +269,6 @@ int GraphicsContext::Init(Config config) {
     transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
   } else {
     transform = surfCapabilities.currentTransform;
-  }
-
-  // Create semaphores
-  VkSemaphoreCreateInfo semaphoreCreateInfo;
-  semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-  semaphoreCreateInfo.pNext = NULL;
-  semaphoreCreateInfo.flags = 0;
-  if (vkCreateSemaphore(dev, &semaphoreCreateInfo, NULL,
-                        &imageAvailableSemaphore) != VK_SUCCESS) {
-    std::cout << "Unable to create semaphores" << std::endl;
-  }
-  if (vkCreateSemaphore(dev, &semaphoreCreateInfo, NULL,
-                        &renderingFinishedSemaphore) != VK_SUCCESS) {
-    std::cout << "Unable to create semaphores" << std::endl;
   }
 
   // Create swapchain
@@ -305,16 +295,88 @@ int GraphicsContext::Init(Config config) {
   if (vkCreateSwapchainKHR(dev, &swapchainCreateInfo, NULL, &swapchain) !=
       VK_SUCCESS) {
     std::cout << "Unable to create swapchain" << std::endl;
+    return false;
+  }
+
+  if (!CreateSemaphores()) {
+    return false;
+  };
+
+  if (!CreateCommandPool()) {
+    return false;
+  };
+
+  ready = true;
+
+  return true;
+}
+
+void VulkanContext::Destroy() { vkDestroyInstance(instance, NULL); }
+
+bool VulkanContext::CreateSemaphores() {
+  // Create semaphores
+  VkSemaphoreCreateInfo semaphoreCreateInfo;
+  semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+  semaphoreCreateInfo.pNext = NULL;
+  semaphoreCreateInfo.flags = 0;
+  if (vkCreateSemaphore(dev, &semaphoreCreateInfo, NULL,
+                        &acquireCompleteSemaphore) != VK_SUCCESS) {
+    std::cout << "Unable to create semaphore" << std::endl;
+    return false;
+  }
+  if (vkCreateSemaphore(dev, &semaphoreCreateInfo, NULL,
+                        &renderCompleteSemaphore) != VK_SUCCESS) {
+    std::cout << "Unable to create semaphore" << std::endl;
+    return false;
   }
 }
-void GraphicsContext::Destroy() { vkDestroyInstance(instance, NULL); }
 
-void GraphicsContext::Swap() {
+bool VulkanContext::CreateCommandPool() {
+  // Create command pool for buffer allocation
+  VkCommandPoolCreateInfo commandPoolCreateInfo;
+  commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+  commandPoolCreateInfo.pNext = NULL;
+  commandPoolCreateInfo.flags = 0;
+  commandPoolCreateInfo.queueFamilyIndex = presentQueueIndex;
+
+  if (vkCreateCommandPool(dev, &commandPoolCreateInfo, NULL, &commandPool) !=
+      VK_SUCCESS) {
+    std::cout << "Unable to create present command pool" << std::endl;
+    return false;
+  }
+
+  uint32_t imageCount = 0;
+  if (vkGetSwapchainImagesKHR(dev, swapchain, &imageCount, NULL) !=
+      VK_SUCCESS) {
+    std::cout << "Unable to get number of swapchain images" << std::endl;
+    return false;
+  }
+
+  /*  presentQueueCmdBuffers.resize(imageCount);
+
+    VkCommandBufferAllocateInfo commandBufferAllocateInfo;
+    commandBufferAllocateInfo.sType =
+        VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    commandBufferAllocateInfo.pNext = NULL;
+    commandBufferAllocateInfo.commandPool = presentQueueCmdPool;
+    commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    commandBufferAllocateInfo.commandBufferCount = imageCount;
+
+    if (vkAllocateCommandBuffers(dev, &commandBufferAllocateInfo,
+                                 &presentQueueCmdBuffers[0]) != VK_SUCCESS) {
+      std::cout << "Unable to allocate command buffers" << std::endl;
+      return false;
+    }*/
+
+  return true;
+}
+
+void VulkanContext::Swap() {
   VkResult result;
 
   uint32_t imageIndex = 0;
   result = vkAcquireNextImageKHR(dev, swapchain, UINT64_MAX,
-                                 imageAvailableSemaphore, NULL, &imageIndex);
+                                 acquireCompleteSemaphore, NULL, &imageIndex);
   switch (result) {
   case VK_SUCCESS:
   case VK_SUBOPTIMAL_KHR:
@@ -325,28 +387,11 @@ void GraphicsContext::Swap() {
     std::cout << "Unable to get next swap chain image" << std::endl;
   }
 
-  /*VkPipelineStageFlags waitDstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
-  VkSubmitInfo submitInfo;
-  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  submitInfo.pNext = NULL;
-  submitInfo.waitSemaphoreCount = 1;
-  submitInfo.pWaitSemaphores = &imageAvailableSemaphore;
-  submitInfo.pWaitDstStageMask = &waitDstStageMask;
-  submitInfo.commandBufferCount = 1;
-  submitInfo.pCommandBuffers = NULL; // TODO
-  submitInfo.signalSemaphoreCount = 1;
-  submitInfo.pSignalSemaphores = &renderingFinishedSemaphore;
-
-  if (vkQueueSubmit(NULL, 1, &submitInfo, NULL) != VK_SUCCESS) {
-    std::cout << "Unable to submit queue" << std::endl;
-    return;
-  }*/
-
   VkPresentInfoKHR presentInfo;
   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
   presentInfo.pNext = NULL;
   presentInfo.waitSemaphoreCount = 1;
-  presentInfo.pWaitSemaphores = &imageAvailableSemaphore;
+  presentInfo.pWaitSemaphores = &acquireCompleteSemaphore;
   presentInfo.swapchainCount = 1;
   presentInfo.pSwapchains = &swapchain;
   presentInfo.pImageIndices = &imageIndex;
@@ -363,6 +408,7 @@ void GraphicsContext::Swap() {
   default:
     std::cout << "Unable to present swap chain image" << std::endl;
   }
+}
 }
 }
 }
