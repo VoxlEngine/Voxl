@@ -2,11 +2,11 @@
 
 #include <voxl.hpp>
 
+#include <app/game.hpp>
 #include <config.hpp>
-#include <game.hpp>
 
 using namespace voxl;
-using namespace voxl::graphics;
+using namespace voxl::app;
 
 int main() {
   Config config;

@@ -1,9 +1,8 @@
 #ifndef VOXL_GRAPHICS_GL_CONTEXT_H_
 #define VOXL_GRAPHICS_GL_CONTEXT_H_
 
-#define GL_VERSION_MAJOR 1
-#define GL_VERSION_MINOR 0
-#define GL_VERSION_PATCH 8
+#define GL_VERSION_MAJOR 3
+#define GL_VERSION_MINOR 3
 #include <GL/gl.h>
 
 #include "voxl.hpp"

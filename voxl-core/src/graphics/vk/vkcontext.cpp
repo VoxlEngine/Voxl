@@ -8,11 +8,141 @@
 namespace voxl {
 namespace graphics {
 namespace vk {
-// TODO: Separate into different functions and allow swapchain recreation on
-// resize
+// TODO: Resizing
 bool VkContext::Init(Config config) {
-  ready = false;
+  if (!CreateSwapchain(config.windowTitle, config.windowWidth,
+                       config.windowHeight)) {
+    std::cout << "Unable to create swapchain" << std::endl;
+  }
 
+  if (!CreateSemaphores()) {
+    std::cout << "Unable to create semaphores" << std::endl;
+    return false;
+  };
+
+  if (!CreateCommandBuffers()) {
+    std::cout << "Unable to create command buffers" << std::endl;
+    return false;
+  };
+
+  // Record command buffers
+  /*uint32_t imageCount = static_cast<uint32_t>(graphicsCmdBuffers.size());
+
+  std::vector<VkImage> swapchainImages(imageCount);
+  if (vkGetSwapchainImagesKHR(dev, swapchain, &imageCount,
+                              &swapchainImages[0]) != VK_SUCCESS) {
+    std::cout << "Unable to get swapchain images" << std::endl;
+    return false;
+  }
+
+  VkCommandBufferBeginInfo beginInfo;
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.pNext = NULL;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+  beginInfo.pInheritanceInfo = NULL;
+
+  VkClearColorValue clearColor = {{1.0f, 0.8f, 0.4f, 0.0f}};
+
+  VkImageSubresourceRange subresourceRange;
+  subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  subresourceRange.baseMipLevel = 0;
+  subresourceRange.levelCount = 1;
+  subresourceRange.baseArrayLayer = 0;
+  subresourceRange.layerCount = 1;
+
+  for (uint32_t i = 0; i < imageCount; i++) {
+    // Begin command buffer
+    vkBeginCommandBuffer(graphicsCmdBuffers[i], &beginInfo);
+
+    // Set the image layout
+    SetImageLayout(graphicsCmdBuffers[i], swapchainImages[i],
+                   subresourceRange, VK_IMAGE_LAYOUT_UNDEFINED,
+                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+    // Clear the image
+    vkCmdClearColorImage(graphicsCmdBuffers[i], swapchainImages[i],
+                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1,
+                         &subresourceRange);
+
+    // Set the image layout back to undefined
+    SetImageLayout(graphicsCmdBuffers[i], swapchainImages[i],
+                   subresourceRange, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                   VK_IMAGE_LAYOUT_UNDEFINED);
+
+    // End command buffer
+    if (vkEndCommandBuffer(graphicsCmdBuffers[i]) != VK_SUCCESS) {
+      std::cout << "Unable to end command buffer" << std::endl;
+      return false;
+    }
+  }*/
+
+  return true;
+}
+
+void VkContext::Destroy() {
+  vkDestroyInstance(instance, NULL);
+  glfwTerminate();
+}
+
+void VkContext::Swap() {
+  VkResult result;
+
+  uint32_t imageIndex = 0;
+  result = vkAcquireNextImageKHR(dev, swapchain, UINT64_MAX,
+                                 acquireCompleteSemaphore, NULL, &imageIndex);
+  switch (result) {
+  case VK_SUCCESS:
+  case VK_SUBOPTIMAL_KHR:
+    break;
+  case VK_ERROR_OUT_OF_DATE_KHR:
+    std::cout << "Window size changed" << std::endl;
+  default:
+    std::cout << "Unable to get next swap chain image" << std::endl;
+  }
+
+  /*VkPipelineStageFlags waitDstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+  VkSubmitInfo submitInfo;
+  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submitInfo.pNext = NULL;
+  submitInfo.waitSemaphoreCount = 1;
+  submitInfo.pWaitSemaphores = &acquireCompleteSemaphore;
+  submitInfo.pWaitDstStageMask = &waitDstStageMask;
+  submitInfo.commandBufferCount = 1;
+  submitInfo.pCommandBuffers = &graphicsCmdBuffers[imageIndex];
+  submitInfo.signalSemaphoreCount = 1;
+  submitInfo.pSignalSemaphores = &renderCompleteSemaphore;
+
+  if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, NULL) != VK_SUCCESS) {
+    std::cout << "Unable to submit queues" << std::endl;
+    return;
+  }*/
+
+  VkPresentInfoKHR presentInfo;
+  presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+  presentInfo.pNext = NULL;
+  presentInfo.waitSemaphoreCount = 1;
+  presentInfo.pWaitSemaphores = &acquireCompleteSemaphore;
+  presentInfo.swapchainCount = 1;
+  presentInfo.pSwapchains = &swapchain;
+  presentInfo.pImageIndices = &imageIndex;
+  presentInfo.pResults = NULL;
+
+  result = vkQueuePresentKHR(presentQueue, &presentInfo);
+
+  switch (result) {
+  case VK_SUCCESS:
+    break;
+  case VK_ERROR_OUT_OF_DATE_KHR:
+  case VK_SUBOPTIMAL_KHR:
+    std::cout << "Window size changed" << std::endl;
+  default:
+    std::cout << "Unable to present swap chain image" << std::endl;
+  }
+
+  vkDeviceWaitIdle(dev);
+}
+
+bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   // Initialize GLFW
   if (!glfwInit()) {
     std::cout << "Unable to initialize GLFW" << std::endl;
@@ -32,7 +162,7 @@ bool VkContext::Init(Config config) {
   VkApplicationInfo appCreateInfo;
   appCreateInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   appCreateInfo.pNext = NULL;
-  appCreateInfo.pApplicationName = config.windowTitle;
+  appCreateInfo.pApplicationName = title;
   appCreateInfo.pEngineName = "Voxl";
   appCreateInfo.engineVersion = VK_MAKE_VERSION(
       VOXL_VERSION_MAJOR, VOXL_VERSION_MINOR, VOXL_VERSION_PATCH);
@@ -124,8 +254,9 @@ bool VkContext::Init(Config config) {
   }
 
   if (graphicsQueueIndex == UINT32_MAX || presentQueueIndex == UINT32_MAX) {
-    std::cout << "Unable to find queue which supports both present and graphics"
-              << std::endl;
+    std::cout
+        << "Unable to find queue which supports both present and graphics "
+        << std::endl;
     return false;
   }
 
@@ -167,8 +298,7 @@ bool VkContext::Init(Config config) {
   // Create window
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-  window = glfwCreateWindow(config.windowWidth, config.windowHeight,
-                            config.windowTitle, NULL, NULL);
+  window = glfwCreateWindow(width, height, title, NULL, NULL);
 
   if (window == NULL) {
     std::cout << "Unable to create GLFW window" << std::endl;
@@ -300,76 +430,7 @@ bool VkContext::Init(Config config) {
     return false;
   }
 
-  if (!CreateSemaphores()) {
-    return false;
-  };
-
-  if (!CreateCommandBuffers()) {
-    return false;
-  };
-  /*
-    // Record command buffers
-    uint32_t imageCount = static_cast<uint32_t>(graphicsCmdBuffers.size());
-
-    std::vector<VkImage> swapchainImages(imageCount);
-    if (vkGetSwapchainImagesKHR(dev, swapchain, &imageCount,
-                                &swapchainImages[0]) != VK_SUCCESS) {
-      std::cout << "Unable to get swapchain images" << std::endl;
-      return false;
-    }
-
-    VkCommandBufferBeginInfo beginInfo;
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.pNext = NULL;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-    beginInfo.pInheritanceInfo = NULL;
-
-    VkClearColorValue clearColor = {{1.0f, 0.8f, 0.4f, 0.0f}};
-
-    VkImageSubresourceRange subresourceRange;
-    subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    subresourceRange.baseMipLevel = 0;
-    subresourceRange.levelCount = 1;
-    subresourceRange.baseArrayLayer = 0;
-    subresourceRange.layerCount = 1;
-
-    for (uint32_t i = 0; i < imageCount; i++) {
-      // Begin command buffer
-      vkBeginCommandBuffer(graphicsCmdBuffers[i], &beginInfo);
-
-      // Set the image layout
-      SetImageLayout(graphicsCmdBuffers[i], swapchainImages[i],
-    subresourceRange,
-                     VK_IMAGE_LAYOUT_UNDEFINED,
-                     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-
-      // Clear the image
-      vkCmdClearColorImage(graphicsCmdBuffers[i], swapchainImages[i],
-                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1,
-                           &subresourceRange);
-
-      // Set the image layout back to undefined
-      SetImageLayout(graphicsCmdBuffers[i], swapchainImages[i],
-    subresourceRange,
-                     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                     VK_IMAGE_LAYOUT_UNDEFINED);
-
-      // End command buffer
-      if (vkEndCommandBuffer(graphicsCmdBuffers[i]) != VK_SUCCESS) {
-        std::cout << "Unable to end command buffer" << std::endl;
-        return false;
-      }
-    }
-  */
-
-  ready = true;
-
   return true;
-}
-
-void VkContext::Destroy() {
-  vkDestroyInstance(instance, NULL);
-  glfwTerminate();
 }
 
 bool VkContext::CreateSemaphores() {
@@ -388,6 +449,8 @@ bool VkContext::CreateSemaphores() {
     std::cout << "Unable to create semaphore" << std::endl;
     return false;
   }
+
+  return true;
 }
 
 bool VkContext::CreateCommandBuffers() {
@@ -428,67 +491,6 @@ bool VkContext::CreateCommandBuffers() {
   }
 
   return true;
-}
-
-void VkContext::Swap() {
-  // Check if context is ready
-  if (ready) {
-    VkResult result;
-
-    uint32_t imageIndex = 0;
-    result = vkAcquireNextImageKHR(dev, swapchain, UINT64_MAX,
-                                   acquireCompleteSemaphore, NULL, &imageIndex);
-    switch (result) {
-    case VK_SUCCESS:
-    case VK_SUBOPTIMAL_KHR:
-      break;
-    case VK_ERROR_OUT_OF_DATE_KHR:
-      std::cout << "Window size changed" << std::endl;
-    default:
-      std::cout << "Unable to get next swap chain image" << std::endl;
-    }
-
-    VkPipelineStageFlags waitDstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    VkSubmitInfo submitInfo;
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.pNext = NULL;
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = &acquireCompleteSemaphore;
-    submitInfo.pWaitDstStageMask = &waitDstStageMask;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &graphicsCmdBuffers[imageIndex];
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = &renderCompleteSemaphore;
-
-    if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, NULL) != VK_SUCCESS) {
-      std::cout << "Unable to submit queues" << std::endl;
-      return;
-    }
-
-    VkPresentInfoKHR presentInfo;
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    presentInfo.pNext = NULL;
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = &acquireCompleteSemaphore;
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = &swapchain;
-    presentInfo.pImageIndices = &imageIndex;
-    presentInfo.pResults = NULL;
-
-    result = vkQueuePresentKHR(presentQueue, &presentInfo);
-
-    switch (result) {
-    case VK_SUCCESS:
-      break;
-    case VK_ERROR_OUT_OF_DATE_KHR:
-    case VK_SUBOPTIMAL_KHR:
-      std::cout << "Window size changed" << std::endl;
-    default:
-      std::cout << "Unable to present swap chain image" << std::endl;
-    }
-
-    vkDeviceWaitIdle(dev);
-  }
 }
 }
 }

@@ -7,6 +7,7 @@
 #include "graphics/renderer.hpp"
 
 namespace voxl {
+namespace app {
 class Game {
 public:
   Game(Config config);
@@ -15,7 +16,10 @@ public:
 
 private:
   graphics::Renderer renderer;
+
+  int frameCount;
 };
+}
 }
 
 #endif

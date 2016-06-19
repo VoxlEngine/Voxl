@@ -6,9 +6,9 @@
 
 #include "config.hpp"
 
-#ifdef VOXL_USE_VULKAN
+#ifdef VOXL_API_VK
 #include "graphics/vk/vkcontext.hpp"
-#elif defined(VOXL_USE_GL)
+#elif defined(VOXL_API_GL)
 #include "graphics/gl/glcontext.hpp"
 #endif
 
@@ -19,14 +19,14 @@ public:
   Renderer(Config config);
   ~Renderer();
 
-  void Update();
+  void Render();
 
   inline GLFWwindow *getWindow() { return context.window; };
 
 private:
-#ifdef VOXL_USE_VULKAN
+#ifdef VOXL_API_VK
   vk::VkContext context;
-#elif defined(VOXL_USE_GL)
+#elif defined(VOXL_API_GL)
   gl::GlContext context;
 #endif
 };

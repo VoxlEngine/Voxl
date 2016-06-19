@@ -1,4 +1,4 @@
-#include "game.hpp"
+#include "app/game.hpp"
 
 #include <iostream>
 
@@ -11,11 +11,10 @@
 #endif
 
 namespace voxl {
+namespace app {
 Game::Game(Config config) : renderer(config) {}
 
 void Game::start() {
-  float sync = 0.0166f;
-
   float lastTime = glfwGetTime();
 
   while (!glfwWindowShouldClose(renderer.getWindow())) {
@@ -24,24 +23,9 @@ void Game::start() {
 
     glfwPollEvents();
     lastTime = curTime;
-    renderer.Update();
+    renderer.Render();
     std::cout << "FPS: " << 1000.0f / (delta * 1000.0f) << std::endl;
-
-    /*    if (delta >= sync) {
-          glfwPollEvents();
-
-          lastTime = curTime;
-
-          renderer.Update();
-
-          std::cout << "FPS: " << 1000.0f / (delta * 1000.0f) << std::endl;
-        } else {
-    #ifndef VOXL_LINUX
-          usleep((sync - delta) * 1000);
-    #endif
-    #ifdef VOXL_WINDOWS
-          Sleep((sync - delta));
-    #endif*/
   }
+}
 }
 }

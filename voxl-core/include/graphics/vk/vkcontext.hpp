@@ -34,8 +34,6 @@ public:
 
   std::vector<VkCommandBuffer> graphicsCmdBuffers;
 
-  bool ready;
-
 private:
   bool CreateSwapchain(const char *title, int width, int height);
   bool CreateCommandBuffers();

@@ -7,9 +7,13 @@
 namespace voxl {
 namespace graphics {
 
-Renderer::Renderer(Config config) { context.Init(config); }
+Renderer::Renderer(Config config) {
+  if (!context.Init(config)) {
+    std::cout << "Unable to initialize context" << std::endl;
+  }
+}
 Renderer::~Renderer() { context.Destroy(); }
 
-void Renderer::Update() { context.Swap(); }
+void Renderer::Render() { context.Swap(); }
 }
 }
