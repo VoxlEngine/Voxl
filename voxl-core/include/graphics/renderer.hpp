@@ -5,7 +5,12 @@
 #include <GLFW/glfw3.h>
 
 #include "config.hpp"
-#include "graphics/vulkan/vulkancontext.hpp"
+
+#ifdef VOXL_USE_VULKAN
+#include "graphics/vk/vkcontext.hpp"
+#elif defined(VOXL_USE_GL)
+#include "graphics/gl/glcontext.hpp"
+#endif
 
 namespace voxl {
 namespace graphics {
@@ -16,10 +21,14 @@ public:
 
   void Update();
 
-  inline GLFWwindow *getWindow() { return vulkanContext.window; };
+  inline GLFWwindow *getWindow() { return context.window; };
 
 private:
-  vulkan::VulkanContext vulkanContext;
+#ifdef VOXL_USE_VULKAN
+  vk::VkContext context;
+#elif defined(VOXL_USE_GL)
+  gl::GlContext context;
+#endif
 };
 }
 }

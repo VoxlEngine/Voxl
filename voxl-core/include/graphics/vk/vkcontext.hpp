@@ -1,5 +1,5 @@
-#ifndef VOXL_GRAPHICS_GRAPHICS_CONTEXT_H_
-#define VOXL_GRAPHICS_GRAPHICS_CONTEXT_H_
+#ifndef VOXL_GRAPHICS_VULKAN_CONTEXT_H_
+#define VOXL_GRAPHICS_VULKAN_CONTEXT_H_
 
 #define VULKAN_VERSION_MAJOR 1
 #define VULKAN_VERSION_MINOR 0
@@ -12,15 +12,16 @@
 
 #include "config.hpp"
 
+#include "graphics/context.hpp"
+
 namespace voxl {
 namespace graphics {
-namespace vulkan {
-class VulkanContext {
+namespace vk {
+class VkContext : public Context {
 public:
   bool Init(Config config);
   void Destroy();
   void Swap();
-  bool Clear();
 
   GLFWwindow *window;
 
@@ -31,11 +32,13 @@ public:
 
   VkCommandPool commandPool;
 
+  std::vector<VkCommandBuffer> graphicsCmdBuffers;
+
   bool ready;
 
 private:
   bool CreateSwapchain(const char *title, int width, int height);
-  bool CreateCommandPool();
+  bool CreateCommandBuffers();
   bool CreateSemaphores();
 
   VkInstance instance;

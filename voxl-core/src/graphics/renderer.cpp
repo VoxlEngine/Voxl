@@ -7,9 +7,9 @@
 namespace voxl {
 namespace graphics {
 
-Renderer::Renderer(Config config) { vulkanContext.Init(config); }
-Renderer::~Renderer() { vulkanContext.Destroy(); }
+Renderer::Renderer(Config config) { context.Init(config); }
+Renderer::~Renderer() { context.Destroy(); }
 
-void Renderer::Update() { vulkanContext.Swap(); }
+void Renderer::Update() { context.Swap(); }
 }
 }

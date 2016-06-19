@@ -5,7 +5,8 @@
 #define VOXL_VERSION_MINOR 0
 #define VOXL_VERSION_PATCH 1
 
-#define VOXL_USE_VULKAN
+#define VOXL_USE_GL
+//#define VOXL_USE_VULKAN
 
 #ifdef _WIN32
 #define VOXL_WINDOWS

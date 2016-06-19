@@ -2,15 +2,17 @@
 #include <iostream>
 #include <vector>
 
-#include "graphics/vulkan/vulkancontext.hpp"
+#include "graphics/vk/util.hpp"
+#include "graphics/vk/vkcontext.hpp"
 
 namespace voxl {
 namespace graphics {
-namespace vulkan {
+namespace vk {
 // TODO: Separate into different functions and allow swapchain recreation on
 // resize
-bool VulkanContext::Init(Config config) {
+bool VkContext::Init(Config config) {
   ready = false;
+
   // Initialize GLFW
   if (!glfwInit()) {
     std::cout << "Unable to initialize GLFW" << std::endl;
@@ -302,18 +304,75 @@ bool VulkanContext::Init(Config config) {
     return false;
   };
 
-  if (!CreateCommandPool()) {
+  if (!CreateCommandBuffers()) {
     return false;
   };
+  /*
+    // Record command buffers
+    uint32_t imageCount = static_cast<uint32_t>(graphicsCmdBuffers.size());
+
+    std::vector<VkImage> swapchainImages(imageCount);
+    if (vkGetSwapchainImagesKHR(dev, swapchain, &imageCount,
+                                &swapchainImages[0]) != VK_SUCCESS) {
+      std::cout << "Unable to get swapchain images" << std::endl;
+      return false;
+    }
+
+    VkCommandBufferBeginInfo beginInfo;
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.pNext = NULL;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    beginInfo.pInheritanceInfo = NULL;
+
+    VkClearColorValue clearColor = {{1.0f, 0.8f, 0.4f, 0.0f}};
+
+    VkImageSubresourceRange subresourceRange;
+    subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subresourceRange.baseMipLevel = 0;
+    subresourceRange.levelCount = 1;
+    subresourceRange.baseArrayLayer = 0;
+    subresourceRange.layerCount = 1;
+
+    for (uint32_t i = 0; i < imageCount; i++) {
+      // Begin command buffer
+      vkBeginCommandBuffer(graphicsCmdBuffers[i], &beginInfo);
+
+      // Set the image layout
+      SetImageLayout(graphicsCmdBuffers[i], swapchainImages[i],
+    subresourceRange,
+                     VK_IMAGE_LAYOUT_UNDEFINED,
+                     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+      // Clear the image
+      vkCmdClearColorImage(graphicsCmdBuffers[i], swapchainImages[i],
+                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1,
+                           &subresourceRange);
+
+      // Set the image layout back to undefined
+      SetImageLayout(graphicsCmdBuffers[i], swapchainImages[i],
+    subresourceRange,
+                     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                     VK_IMAGE_LAYOUT_UNDEFINED);
+
+      // End command buffer
+      if (vkEndCommandBuffer(graphicsCmdBuffers[i]) != VK_SUCCESS) {
+        std::cout << "Unable to end command buffer" << std::endl;
+        return false;
+      }
+    }
+  */
 
   ready = true;
 
   return true;
 }
 
-void VulkanContext::Destroy() { vkDestroyInstance(instance, NULL); }
+void VkContext::Destroy() {
+  vkDestroyInstance(instance, NULL);
+  glfwTerminate();
+}
 
-bool VulkanContext::CreateSemaphores() {
+bool VkContext::CreateSemaphores() {
   // Create semaphores
   VkSemaphoreCreateInfo semaphoreCreateInfo;
   semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -331,7 +390,7 @@ bool VulkanContext::CreateSemaphores() {
   }
 }
 
-bool VulkanContext::CreateCommandPool() {
+bool VkContext::CreateCommandBuffers() {
   // Create command pool for buffer allocation
   VkCommandPoolCreateInfo commandPoolCreateInfo;
   commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -352,61 +411,83 @@ bool VulkanContext::CreateCommandPool() {
     return false;
   }
 
-  /*  presentQueueCmdBuffers.resize(imageCount);
+  graphicsCmdBuffers.resize(imageCount);
 
-    VkCommandBufferAllocateInfo commandBufferAllocateInfo;
-    commandBufferAllocateInfo.sType =
-        VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    commandBufferAllocateInfo.pNext = NULL;
-    commandBufferAllocateInfo.commandPool = presentQueueCmdPool;
-    commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    commandBufferAllocateInfo.commandBufferCount = imageCount;
+  VkCommandBufferAllocateInfo commandBufferAllocateInfo;
+  commandBufferAllocateInfo.sType =
+      VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+  commandBufferAllocateInfo.pNext = NULL;
+  commandBufferAllocateInfo.commandPool = commandPool;
+  commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  commandBufferAllocateInfo.commandBufferCount = imageCount;
 
-    if (vkAllocateCommandBuffers(dev, &commandBufferAllocateInfo,
-                                 &presentQueueCmdBuffers[0]) != VK_SUCCESS) {
-      std::cout << "Unable to allocate command buffers" << std::endl;
-      return false;
-    }*/
+  if (vkAllocateCommandBuffers(dev, &commandBufferAllocateInfo,
+                               &graphicsCmdBuffers[0]) != VK_SUCCESS) {
+    std::cout << "Unable to allocate command buffers" << std::endl;
+    return false;
+  }
 
   return true;
 }
 
-void VulkanContext::Swap() {
-  VkResult result;
+void VkContext::Swap() {
+  // Check if context is ready
+  if (ready) {
+    VkResult result;
 
-  uint32_t imageIndex = 0;
-  result = vkAcquireNextImageKHR(dev, swapchain, UINT64_MAX,
-                                 acquireCompleteSemaphore, NULL, &imageIndex);
-  switch (result) {
-  case VK_SUCCESS:
-  case VK_SUBOPTIMAL_KHR:
-    break;
-  case VK_ERROR_OUT_OF_DATE_KHR:
-    std::cout << "Window size changed" << std::endl;
-  default:
-    std::cout << "Unable to get next swap chain image" << std::endl;
-  }
+    uint32_t imageIndex = 0;
+    result = vkAcquireNextImageKHR(dev, swapchain, UINT64_MAX,
+                                   acquireCompleteSemaphore, NULL, &imageIndex);
+    switch (result) {
+    case VK_SUCCESS:
+    case VK_SUBOPTIMAL_KHR:
+      break;
+    case VK_ERROR_OUT_OF_DATE_KHR:
+      std::cout << "Window size changed" << std::endl;
+    default:
+      std::cout << "Unable to get next swap chain image" << std::endl;
+    }
 
-  VkPresentInfoKHR presentInfo;
-  presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-  presentInfo.pNext = NULL;
-  presentInfo.waitSemaphoreCount = 1;
-  presentInfo.pWaitSemaphores = &acquireCompleteSemaphore;
-  presentInfo.swapchainCount = 1;
-  presentInfo.pSwapchains = &swapchain;
-  presentInfo.pImageIndices = &imageIndex;
-  presentInfo.pResults = NULL;
+    VkPipelineStageFlags waitDstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    VkSubmitInfo submitInfo;
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.pNext = NULL;
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = &acquireCompleteSemaphore;
+    submitInfo.pWaitDstStageMask = &waitDstStageMask;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &graphicsCmdBuffers[imageIndex];
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = &renderCompleteSemaphore;
 
-  result = vkQueuePresentKHR(presentQueue, &presentInfo);
+    if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, NULL) != VK_SUCCESS) {
+      std::cout << "Unable to submit queues" << std::endl;
+      return;
+    }
 
-  switch (result) {
-  case VK_SUCCESS:
-    break;
-  case VK_ERROR_OUT_OF_DATE_KHR:
-  case VK_SUBOPTIMAL_KHR:
-    std::cout << "Window size changed" << std::endl;
-  default:
-    std::cout << "Unable to present swap chain image" << std::endl;
+    VkPresentInfoKHR presentInfo;
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.pNext = NULL;
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = &acquireCompleteSemaphore;
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = &swapchain;
+    presentInfo.pImageIndices = &imageIndex;
+    presentInfo.pResults = NULL;
+
+    result = vkQueuePresentKHR(presentQueue, &presentInfo);
+
+    switch (result) {
+    case VK_SUCCESS:
+      break;
+    case VK_ERROR_OUT_OF_DATE_KHR:
+    case VK_SUBOPTIMAL_KHR:
+      std::cout << "Window size changed" << std::endl;
+    default:
+      std::cout << "Unable to present swap chain image" << std::endl;
+    }
+
+    vkDeviceWaitIdle(dev);
   }
 }
 }

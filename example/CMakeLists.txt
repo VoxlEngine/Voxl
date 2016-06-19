@@ -4,4 +4,4 @@ include_directories(.)
 add_executable(example
   main.cpp)
 
-target_link_libraries(example voxl ${VULKAN_LIBRARY} glfw)
+target_link_libraries(example voxl ${VULKAN_LIBRARY} ${OPENGL_LIBRARY} glfw)

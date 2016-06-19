@@ -22,22 +22,26 @@ void Game::start() {
     float curTime = glfwGetTime();
     float delta = curTime - lastTime;
 
-    if (delta >= sync) {
-      glfwPollEvents();
+    glfwPollEvents();
+    lastTime = curTime;
+    renderer.Update();
+    std::cout << "FPS: " << 1000.0f / (delta * 1000.0f) << std::endl;
 
-      lastTime = curTime;
+    /*    if (delta >= sync) {
+          glfwPollEvents();
 
-      renderer.Update();
+          lastTime = curTime;
 
-      std::cout << "FPS: " << 1000.0f / (delta * 1000.0f) << std::endl;
-    } else {
-#ifndef VOXL_LINUX
-      usleep((sync - delta) * 1000);
-#endif
-#ifdef VOXL_WINDOWS
-      Sleep((sync - delta));
-#endif
-    }
+          renderer.Update();
+
+          std::cout << "FPS: " << 1000.0f / (delta * 1000.0f) << std::endl;
+        } else {
+    #ifndef VOXL_LINUX
+          usleep((sync - delta) * 1000);
+    #endif
+    #ifdef VOXL_WINDOWS
+          Sleep((sync - delta));
+    #endif*/
   }
 }
 }
