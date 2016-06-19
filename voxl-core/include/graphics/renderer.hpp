@@ -3,8 +3,10 @@
 
 #include "voxl.hpp"
 #include <GLFW/glfw3.h>
+#include <vector>
 
 #include "config.hpp"
+#include "graphics/rendercommand.hpp"
 
 #ifdef VOXL_API_VK
 #include "graphics/vk/vkcontext.hpp"
@@ -21,6 +23,8 @@ public:
 
   void Render();
 
+  void Submit(RenderCommand *command);
+
   inline GLFWwindow *getWindow() { return context.window; };
 
 private:
@@ -29,6 +33,10 @@ private:
 #elif defined(VOXL_API_GL)
   gl::GlContext context;
 #endif
+
+  std::vector<RenderCommand *> commands;
+
+  void ClearCommands();
 };
 }
 }

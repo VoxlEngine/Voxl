@@ -14,6 +14,17 @@ Renderer::Renderer(Config config) {
 }
 Renderer::~Renderer() { context.Destroy(); }
 
-void Renderer::Render() { context.Swap(); }
+void Renderer::Render() {
+  // Run all render commands
+  for (int i = 0; i < commands.size(); i++) {
+    commands[i]->Execute(context);
+    commands.erase(commands.begin() + i);
+  }
+
+  context.Swap();
+}
+
+void Renderer::Submit(RenderCommand *command) { commands.push_back(command); }
+void Renderer::ClearCommands() { commands.clear(); }
 }
 }
