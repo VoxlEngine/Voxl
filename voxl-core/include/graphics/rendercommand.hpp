@@ -7,7 +7,7 @@ namespace voxl {
 namespace graphics {
 class RenderCommand {
 public:
-  virtual bool Execute(Context &context) = 0;
+  virtual bool Execute(Context *context) = 0;
 };
 }
 }

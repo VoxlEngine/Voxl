@@ -23,6 +23,10 @@ public:
   void Destroy();
   void Swap();
 
+  inline VkDevice GetDevice() { return dev; };
+  inline VkInstance GetInstance() { return instance; };
+  inline VkSwapchainKHR GetSwapchain() { return swapchain; };
+
   GLFWwindow *window;
 
   VkQueue graphicsQueue;

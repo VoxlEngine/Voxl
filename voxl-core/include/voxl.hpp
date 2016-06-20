@@ -11,10 +11,10 @@
 // that all other definitions are undefined/commented
 
 // Use OpenGL for graphics
-#define VOXL_API_GL
+// #define VOXL_API_GL
 
 // Use Vulkan for graphics
-// #define VOXL_API_VK
+#define VOXL_API_VK
 
 // Debug
 // This will enable/disable various features such as debug logging, Vulkan

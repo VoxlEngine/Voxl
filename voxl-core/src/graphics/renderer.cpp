@@ -17,7 +17,7 @@ Renderer::~Renderer() { context.Destroy(); }
 void Renderer::Render() {
   // Run all render commands
   for (int i = 0; i < commands.size(); i++) {
-    commands[i]->Execute(context);
+    commands[i]->Execute(&context);
     commands.erase(commands.begin() + i);
   }
 

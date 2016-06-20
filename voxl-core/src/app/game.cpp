@@ -10,7 +10,7 @@
 #include <windows.h>
 #endif
 
-#include "graphics/gl/commands.hpp"
+#include "graphics/commands/clearcommand.hpp"
 #include "math/vec4.hpp"
 
 namespace voxl {
@@ -23,13 +23,13 @@ void Game::start() {
   while (!glfwWindowShouldClose(renderer.getWindow())) {
     float curTime = glfwGetTime();
     float delta = curTime - lastTime;
-
-    graphics::gl::GlClearCommand clearCommand(
-        math::Vec4(0.5f, 0.5f, 0.5f, 1.0f));
-    renderer.Submit(&clearCommand);
-
     glfwPollEvents();
     lastTime = curTime;
+
+    graphics::commands::ClearCommand clearCmd(
+        math::Vec4(0.3f, 0.3f, 0.3f, 1.0f));
+    renderer.Submit(&clearCmd);
+
     renderer.Render();
     std::cout << "FPS: " << 1000.0f / (delta * 1000.0f) << std::endl;
   }

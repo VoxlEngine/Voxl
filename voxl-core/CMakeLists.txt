@@ -2,7 +2,7 @@ project(voxl-core)
 
 add_library(voxl
   src/app/game.cpp
-  src/graphics/gl/commands.cpp
+  src/graphics/commands/clearcommand.cpp
   src/graphics/gl/glcontext.cpp
   src/graphics/vk/util.cpp
   src/graphics/vk/vkcontext.cpp
