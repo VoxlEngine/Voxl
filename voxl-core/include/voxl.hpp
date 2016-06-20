@@ -23,6 +23,9 @@
 #define VOXL_DEBUG
 #endif
 
+// DISABLE THIS!!!!
+#define VOXL_DEBUG
+
 // Platform definitions
 // This controls platform-specific components of the engine
 #ifdef _WIN32

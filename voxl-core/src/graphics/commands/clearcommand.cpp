@@ -10,8 +10,9 @@ namespace graphics {
 namespace commands {
 ClearCommand::ClearCommand(math::Vec4 clearColor) : color(clearColor) {}
 bool ClearCommand::Execute(Context *context) {
+  std::cout << "CLEAR" << std::endl;
 #ifdef VOXL_API_VK
-  vk::VkContext *vkcontext = dynamic_cast<vk::VkContext *>(context);
+  vk::VkContext *vkcontext = static_cast<vk::VkContext *>(context);
   uint32_t imageCount =
       static_cast<uint32_t>(vkcontext->graphicsCmdBuffers.size());
 

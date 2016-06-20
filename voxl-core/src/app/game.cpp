@@ -15,7 +15,10 @@
 
 namespace voxl {
 namespace app {
-Game::Game(Config config) : renderer(config) {}
+Game::Game(Config config) : renderer(config) {
+  renderer.Submit(
+      new graphics::commands::ClearCommand(math::Vec4(0.3f, 0.3f, 0.3f, 1.0f)));
+}
 
 void Game::start() {
   float lastTime = glfwGetTime();
@@ -25,10 +28,6 @@ void Game::start() {
     float delta = curTime - lastTime;
     glfwPollEvents();
     lastTime = curTime;
-
-    graphics::commands::ClearCommand clearCmd(
-        math::Vec4(0.3f, 0.3f, 0.3f, 1.0f));
-    renderer.Submit(&clearCmd);
 
     renderer.Render();
     std::cout << "FPS: " << 1000.0f / (delta * 1000.0f) << std::endl;

@@ -8,6 +8,49 @@
 namespace voxl {
 namespace graphics {
 namespace vk {
+#ifdef VOXL_DEBUG
+PFN_vkCreateDebugReportCallbackEXT CreateDebugReportCallback = VK_NULL_HANDLE;
+PFN_vkDestroyDebugReportCallbackEXT DestroyDebugReportCallback = VK_NULL_HANDLE;
+PFN_vkDebugReportMessageEXT dbgBreakCallback = VK_NULL_HANDLE;
+
+VkDebugReportCallbackEXT msgCallback;
+
+VkBool32 messageCallback(VkDebugReportFlagsEXT flags,
+                         VkDebugReportObjectTypeEXT objType, uint64_t srcObject,
+                         size_t location, int32_t msgCode,
+                         const char *pLayerPrefix, const char *pMsg,
+                         void *pUserData) {
+  std::string text(pMsg);
+
+  std::string prefix("");
+
+  if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) {
+    prefix += "ERROR ";
+  };
+
+  if (flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) {
+    prefix += "WARNING ";
+  };
+
+  if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) {
+    prefix += "PERFORMANCE ";
+  };
+
+  if (flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) {
+    prefix += "INFO ";
+  }
+
+  if (flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT) {
+    prefix += "DEBUG ";
+  }
+
+  std::cout << prefix << " [" << pLayerPrefix << "] Code " << msgCode << " : "
+            << pMsg << std::endl;
+
+  return VK_FALSE;
+}
+#endif
+
 // TODO: Resizing
 bool VkContext::Init(Config config) {
   if (!CreateSwapchain(config.windowTitle, config.windowWidth,
@@ -25,62 +68,39 @@ bool VkContext::Init(Config config) {
     return false;
   };
 
-  // Record command buffers
-  /*uint32_t imageCount = static_cast<uint32_t>(graphicsCmdBuffers.size());
-
-  std::vector<VkImage> swapchainImages(imageCount);
-  if (vkGetSwapchainImagesKHR(dev, swapchain, &imageCount,
-                              &swapchainImages[0]) != VK_SUCCESS) {
-    std::cout << "Unable to get swapchain images" << std::endl;
-    return false;
-  }
-
-  VkCommandBufferBeginInfo beginInfo;
-  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  beginInfo.pNext = NULL;
-  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-  beginInfo.pInheritanceInfo = NULL;
-
-  VkClearColorValue clearColor = {{1.0f, 0.8f, 0.4f, 0.0f}};
-
-  VkImageSubresourceRange subresourceRange;
-  subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-  subresourceRange.baseMipLevel = 0;
-  subresourceRange.levelCount = 1;
-  subresourceRange.baseArrayLayer = 0;
-  subresourceRange.layerCount = 1;
-
-  for (uint32_t i = 0; i < imageCount; i++) {
-    // Begin command buffer
-    vkBeginCommandBuffer(graphicsCmdBuffers[i], &beginInfo);
-
-    // Set the image layout
-    SetImageLayout(graphicsCmdBuffers[i], swapchainImages[i],
-                   subresourceRange, VK_IMAGE_LAYOUT_UNDEFINED,
-                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-
-    // Clear the image
-    vkCmdClearColorImage(graphicsCmdBuffers[i], swapchainImages[i],
-                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1,
-                         &subresourceRange);
-
-    // Set the image layout back to undefined
-    SetImageLayout(graphicsCmdBuffers[i], swapchainImages[i],
-                   subresourceRange, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                   VK_IMAGE_LAYOUT_UNDEFINED);
-
-    // End command buffer
-    if (vkEndCommandBuffer(graphicsCmdBuffers[i]) != VK_SUCCESS) {
-      std::cout << "Unable to end command buffer" << std::endl;
-      return false;
-    }
-  }*/
-
   return true;
 }
 
 void VkContext::Destroy() {
+  // Destroy semaphores
+  vkDestroySemaphore(dev, acquireCompleteSemaphore, NULL);
+  vkDestroySemaphore(dev, renderCompleteSemaphore, NULL);
+
+  // Free command buffers
+  vkFreeCommandBuffers(dev, commandPool, (uint32_t)graphicsCmdBuffers.size(),
+                       &graphicsCmdBuffers[0]);
+
+  // Destroy command pool
+  vkDestroyCommandPool(dev, commandPool, NULL);
+
+  // Destroy swapchain
+  vkDestroySwapchainKHR(dev, swapchain, NULL);
+
+  // Destroy surface
+  vkDestroySurfaceKHR(instance, surf, NULL);
+
+  // Destroy device
+  vkDestroyDevice(dev, NULL);
+
+#ifdef VOXL_DEBUG
+  // Destroy debug report callback
+  DestroyDebugReportCallback(instance, msgCallback, NULL);
+#endif
+
+  // Destroy instance
   vkDestroyInstance(instance, NULL);
+
+  // Terminate GLFW
   glfwTerminate();
 }
 
@@ -149,15 +169,22 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
     return false;
   }
 
-  // Check if GLFW supports Vulkan
-  if (!glfwVulkanSupported()) {
-    std::cout << "GLFW does not support Vulkan" << std::endl;
-    return false;
+  std::vector<const char *> enabledLayers;
+  std::vector<const char *> enabledExtensions;
+
+#ifdef VOXL_DEBUG
+  enabledLayers.push_back("VK_LAYER_LUNARG_standard_validation");
+  enabledExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+#endif
+
+  uint32_t glfwExtensionCount = 0;
+  const char **glfwExtensions =
+      glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+  for (int i = 0; i < glfwExtensionCount; i++) {
+    enabledExtensions.push_back(glfwExtensions[i]);
   }
 
-  uint32_t numExtensions = 0;
-  const char **extensionNames =
-      glfwGetRequiredInstanceExtensions(&numExtensions);
+  enabledExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 
   VkApplicationInfo appCreateInfo;
   appCreateInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -174,14 +201,14 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   instanceCreateInfo.pNext = NULL;
   instanceCreateInfo.flags = 0;
   instanceCreateInfo.pApplicationInfo = &appCreateInfo;
-  instanceCreateInfo.enabledLayerCount = 0;
-  instanceCreateInfo.ppEnabledLayerNames = NULL;
-  instanceCreateInfo.enabledExtensionCount = numExtensions;
-  instanceCreateInfo.ppEnabledExtensionNames = extensionNames;
+  instanceCreateInfo.enabledLayerCount = (uint32_t)enabledLayers.size();
+  instanceCreateInfo.ppEnabledLayerNames = &enabledLayers[0];
+  instanceCreateInfo.enabledExtensionCount = (uint32_t)enabledExtensions.size();
+  instanceCreateInfo.ppEnabledExtensionNames = &enabledExtensions[0];
 
   // Create instance
   if (vkCreateInstance(&instanceCreateInfo, NULL, &instance) != VK_SUCCESS) {
-    std::cout << "Unable to create Vulkan instance: Error code " << std::endl;
+    std::cout << "Unable to create Vulkan instance" << std::endl;
     return false;
   }
 
@@ -272,15 +299,18 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   queueCreateInfo.pQueuePriorities = queuePriorities;
 
   // Create device
+  std::vector<const char *> enabledDevExtensions;
+  enabledDevExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+
   VkDeviceCreateInfo devCreateInfo;
   devCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   devCreateInfo.pNext = NULL;
   devCreateInfo.flags = 0;
 
-  devCreateInfo.enabledLayerCount = 0;
-  devCreateInfo.ppEnabledLayerNames = NULL;
-  devCreateInfo.enabledExtensionCount = 0;
-  devCreateInfo.ppEnabledExtensionNames = NULL;
+  devCreateInfo.enabledLayerCount = (uint32_t)enabledLayers.size();
+  devCreateInfo.ppEnabledLayerNames = &enabledLayers[0];
+  devCreateInfo.enabledExtensionCount = (uint32_t)enabledDevExtensions.size();
+  devCreateInfo.ppEnabledExtensionNames = &enabledDevExtensions[0];
   devCreateInfo.pEnabledFeatures = NULL;
 
   devCreateInfo.queueCreateInfoCount = 1;
@@ -290,6 +320,30 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
     std::cout << "Unabled to create Vulkan device" << std::endl;
     return false;
   }
+
+// Set debug validation callback
+#ifdef VOXL_DEBUG
+  CreateDebugReportCallback =
+      (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(
+          instance, "vkCreateDebugReportCallbackEXT");
+  DestroyDebugReportCallback =
+      (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(
+          instance, "vkDestroyDebugReportCallbackEXT");
+  dbgBreakCallback = (PFN_vkDebugReportMessageEXT)vkGetInstanceProcAddr(
+      instance, "vkDebugReportMessageEXT");
+
+  VkDebugReportCallbackCreateInfoEXT dbgCreateInfo;
+  dbgCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
+  dbgCreateInfo.pfnCallback = (PFN_vkDebugReportCallbackEXT)messageCallback;
+  dbgCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT |
+                        VK_DEBUG_REPORT_WARNING_BIT_EXT |
+                        VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+
+  if (CreateDebugReportCallback(instance, &dbgCreateInfo, NULL, &msgCallback) !=
+      VK_SUCCESS) {
+    std::cout << "Unable to create debug report callback" << std::endl;
+  }
+#endif
 
   // Get queues
   vkGetDeviceQueue(dev, graphicsQueueIndex, 0, &graphicsQueue);
@@ -364,6 +418,14 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
     return false;
   }
 
+  // Make sure presentation is supported
+  VkBool32 supported = false;
+  if (vkGetPhysicalDeviceSurfaceSupportKHR(physDevs[0], presentQueueIndex, surf,
+                                           &supported) != VK_SUCCESS) {
+    std::cout << "Unable to query for GPU surface support" << std::endl;
+    return false;
+  }
+
   // Get present modes
   uint32_t presentModeCount = 0;
   if (vkGetPhysicalDeviceSurfacePresentModesKHR(
@@ -424,9 +486,10 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   swapchainCreateInfo.clipped = VK_TRUE;
   swapchainCreateInfo.oldSwapchain = NULL;
 
-  if (vkCreateSwapchainKHR(dev, &swapchainCreateInfo, NULL, &swapchain) !=
-      VK_SUCCESS) {
-    std::cout << "Unable to create swapchain" << std::endl;
+  VkResult result =
+      vkCreateSwapchainKHR(dev, &swapchainCreateInfo, NULL, &swapchain);
+  if (result != VK_SUCCESS) {
+    std::cout << "Unable to create swapchain" << result << std::endl;
     return false;
   }
 
