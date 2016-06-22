@@ -21,7 +21,8 @@ class VkContext : public Context {
 public:
   bool Init(Config config);
   void Destroy();
-  void Swap();
+  void StartFrame();
+  void EndFrame();
 
   inline VkDevice GetDevice() { return dev; };
   inline VkInstance GetInstance() { return instance; };
@@ -29,19 +30,30 @@ public:
 
   GLFWwindow *window;
 
-  VkQueue graphicsQueue;
-  VkQueue presentQueue;
+  VkQueue queue;
   uint32_t graphicsQueueIndex;
   uint32_t presentQueueIndex;
 
+  uint32_t currentImage;
+
+  std::vector<VkImage> swapchainImages;
+
   VkCommandPool commandPool;
 
-  std::vector<VkCommandBuffer> graphicsCmdBuffers;
+  VkCommandBuffer setupCmdBuffer;
+  VkCommandBuffer prePresentCmdBuffer;
+  VkCommandBuffer postPresentCmdBuffer;
+  std::vector<VkCommandBuffer> drawCmdBuffers;
 
 private:
   bool CreateSwapchain(const char *title, int width, int height);
-  bool CreateCommandBuffers();
-  bool CreateSemaphores();
+  bool CreateCommandPool();
+  bool CreateSetupCommandBuffer();
+  bool FlushSetupCommandBuffer();
+  bool CreatePresentCommandBuffers();
+  bool CreateDrawCommandBuffers();
+  bool PrePresentBarrier(VkImage image);
+  bool PostPresentBarrier(VkImage image);
 
   VkInstance instance;
 
@@ -49,7 +61,7 @@ private:
   VkDevice dev;
 
   VkSurfaceKHR surf;
-  VkSwapchainKHR swapchain;
+  VkSwapchainKHR swapchain = NULL;
 
   VkSemaphore acquireCompleteSemaphore;
   VkSemaphore renderCompleteSemaphore;

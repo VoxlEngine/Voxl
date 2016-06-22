@@ -9,7 +9,8 @@ class Context {
 public:
   virtual bool Init(Config config) = 0;
   virtual void Destroy() = 0;
-  virtual void Swap() = 0;
+  virtual void StartFrame() = 0;
+  virtual void EndFrame() = 0;
 };
 }
 }

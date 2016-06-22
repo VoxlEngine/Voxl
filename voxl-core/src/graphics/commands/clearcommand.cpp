@@ -13,15 +13,7 @@ bool ClearCommand::Execute(Context *context) {
   std::cout << "CLEAR" << std::endl;
 #ifdef VOXL_API_VK
   vk::VkContext *vkcontext = static_cast<vk::VkContext *>(context);
-  uint32_t imageCount =
-      static_cast<uint32_t>(vkcontext->graphicsCmdBuffers.size());
-
-  std::vector<VkImage> swapchainImages(imageCount);
-  if (vkGetSwapchainImagesKHR(vkcontext->GetDevice(), vkcontext->GetSwapchain(),
-                              &imageCount, &swapchainImages[0]) != VK_SUCCESS) {
-    std::cout << "Unable to get swapchain images" << std::endl;
-    return false;
-  }
+  uint32_t imageCount = static_cast<uint32_t>(vkcontext->drawCmdBuffers.size());
 
   VkCommandBufferBeginInfo beginInfo;
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -40,29 +32,21 @@ bool ClearCommand::Execute(Context *context) {
 
   for (uint32_t i = 0; i < imageCount; i++) {
     // Begin command buffer
-    vkBeginCommandBuffer(vkcontext->graphicsCmdBuffers[i], &beginInfo);
-
-    // Set the image layout
-    vk::SetImageLayout(vkcontext->graphicsCmdBuffers[i], swapchainImages[i],
-                       subresourceRange, VK_IMAGE_LAYOUT_UNDEFINED,
-                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    vkBeginCommandBuffer(vkcontext->drawCmdBuffers[i], &beginInfo);
 
     // Clear the image
-    vkCmdClearColorImage(vkcontext->graphicsCmdBuffers[i], swapchainImages[i],
+    vkCmdClearColorImage(vkcontext->drawCmdBuffers[i],
+                         vkcontext->swapchainImages[i],
                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1,
                          &subresourceRange);
 
-    // Set the image layout back to undefined
-    vk::SetImageLayout(vkcontext->graphicsCmdBuffers[i], swapchainImages[i],
-                       subresourceRange, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                       VK_IMAGE_LAYOUT_UNDEFINED);
-
     // End command buffer
-    if (vkEndCommandBuffer(vkcontext->graphicsCmdBuffers[i]) != VK_SUCCESS) {
+    if (vkEndCommandBuffer(vkcontext->drawCmdBuffers[i]) != VK_SUCCESS) {
       std::cout << "Unable to end command buffer" << std::endl;
       return false;
     }
   }
+
 #elif defined(VOXL_API_GL)
   glClearColor(color.x, color.y, color.z, color.w);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

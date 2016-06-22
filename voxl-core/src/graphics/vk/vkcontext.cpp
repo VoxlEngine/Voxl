@@ -44,8 +44,8 @@ VkBool32 messageCallback(VkDebugReportFlagsEXT flags,
     prefix += "DEBUG ";
   }
 
-  std::cout << prefix << " [" << pLayerPrefix << "] Code " << msgCode << " : "
-            << pMsg << std::endl;
+  std::cout << prefix << "at " << location << " [" << pLayerPrefix << "] Code "
+            << msgCode << " : " << pMsg << std::endl;
 
   return VK_FALSE;
 }
@@ -58,15 +58,30 @@ bool VkContext::Init(Config config) {
     std::cout << "Unable to create swapchain" << std::endl;
   }
 
-  if (!CreateSemaphores()) {
-    std::cout << "Unable to create semaphores" << std::endl;
+  if (!CreateCommandPool()) {
+    std::cout << "Unable to create command pool" << std::endl;
     return false;
-  };
+  }
 
-  if (!CreateCommandBuffers()) {
-    std::cout << "Unable to create command buffers" << std::endl;
+  if (!CreateSetupCommandBuffer()) {
+    std::cout << "Unable to create setup command buffer" << std::endl;
     return false;
-  };
+  }
+
+  if (!CreatePresentCommandBuffers()) {
+    std::cout << "Unable to create present command buffers" << std::endl;
+    return false;
+  }
+
+  if (!CreateDrawCommandBuffers()) {
+    std::cout << "Unable to create draw command buffers" << std::endl;
+    return false;
+  }
+
+  if (!FlushSetupCommandBuffer()) {
+    std::cout << "Unable to flush setup command buffer" << std::endl;
+    return false;
+  }
 
   return true;
 }
@@ -77,8 +92,14 @@ void VkContext::Destroy() {
   vkDestroySemaphore(dev, renderCompleteSemaphore, NULL);
 
   // Free command buffers
-  vkFreeCommandBuffers(dev, commandPool, (uint32_t)graphicsCmdBuffers.size(),
-                       &graphicsCmdBuffers[0]);
+  if (drawCmdBuffers.size() > 0) {
+    vkFreeCommandBuffers(dev, commandPool, (uint32_t)drawCmdBuffers.size(),
+                         &drawCmdBuffers[0]);
+  }
+
+  // Free present command buffers
+  vkFreeCommandBuffers(dev, commandPool, 1, &prePresentCmdBuffer);
+  vkFreeCommandBuffers(dev, commandPool, 1, &postPresentCmdBuffer);
 
   // Destroy command pool
   vkDestroyCommandPool(dev, commandPool, NULL);
@@ -104,13 +125,10 @@ void VkContext::Destroy() {
   glfwTerminate();
 }
 
-void VkContext::Swap() {
-  VkResult result;
-
-  uint32_t imageIndex = 0;
-  result = vkAcquireNextImageKHR(dev, swapchain, UINT64_MAX,
-                                 acquireCompleteSemaphore, NULL, &imageIndex);
-  switch (result) {
+void VkContext::StartFrame() {
+  switch (vkAcquireNextImageKHR(dev, swapchain, UINT64_MAX,
+                                acquireCompleteSemaphore, NULL,
+                                &currentImage)) {
   case VK_SUCCESS:
   case VK_SUBOPTIMAL_KHR:
     break;
@@ -120,22 +138,11 @@ void VkContext::Swap() {
     std::cout << "Unable to get next swap chain image" << std::endl;
   }
 
-  /*VkPipelineStageFlags waitDstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
-  VkSubmitInfo submitInfo;
-  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  submitInfo.pNext = NULL;
-  submitInfo.waitSemaphoreCount = 1;
-  submitInfo.pWaitSemaphores = &acquireCompleteSemaphore;
-  submitInfo.pWaitDstStageMask = &waitDstStageMask;
-  submitInfo.commandBufferCount = 1;
-  submitInfo.pCommandBuffers = &graphicsCmdBuffers[imageIndex];
-  submitInfo.signalSemaphoreCount = 1;
-  submitInfo.pSignalSemaphores = &renderCompleteSemaphore;
+  PostPresentBarrier(swapchainImages[currentImage]);
+}
 
-  if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, NULL) != VK_SUCCESS) {
-    std::cout << "Unable to submit queues" << std::endl;
-    return;
-  }*/
+void VkContext::EndFrame() {
+  PrePresentBarrier(swapchainImages[currentImage]);
 
   VkPresentInfoKHR presentInfo;
   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -144,12 +151,10 @@ void VkContext::Swap() {
   presentInfo.pWaitSemaphores = &acquireCompleteSemaphore;
   presentInfo.swapchainCount = 1;
   presentInfo.pSwapchains = &swapchain;
-  presentInfo.pImageIndices = &imageIndex;
+  presentInfo.pImageIndices = &currentImage;
   presentInfo.pResults = NULL;
 
-  result = vkQueuePresentKHR(presentQueue, &presentInfo);
-
-  switch (result) {
+  switch (vkQueuePresentKHR(queue, &presentInfo)) {
   case VK_SUCCESS:
     break;
   case VK_ERROR_OUT_OF_DATE_KHR:
@@ -174,6 +179,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
 
 #ifdef VOXL_DEBUG
   enabledLayers.push_back("VK_LAYER_LUNARG_standard_validation");
+
   enabledExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #endif
 
@@ -186,7 +192,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
 
   enabledExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 
-  VkApplicationInfo appCreateInfo;
+  VkApplicationInfo appCreateInfo = {};
   appCreateInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   appCreateInfo.pNext = NULL;
   appCreateInfo.pApplicationName = title;
@@ -196,7 +202,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   appCreateInfo.apiVersion = VK_MAKE_VERSION(
       VULKAN_VERSION_MAJOR, VULKAN_VERSION_MINOR, VULKAN_VERSION_PATCH);
 
-  VkInstanceCreateInfo instanceCreateInfo;
+  VkInstanceCreateInfo instanceCreateInfo = {};
   instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   instanceCreateInfo.pNext = NULL;
   instanceCreateInfo.flags = 0;
@@ -233,7 +239,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   }
 
   // Print physical device info
-  VkPhysicalDeviceProperties deviceProperties;
+  VkPhysicalDeviceProperties deviceProperties = {};
   for (uint32_t i = 0; i < physDevCount; i++) {
     memset(&deviceProperties, 0, sizeof(deviceProperties));
     vkGetPhysicalDeviceProperties(physDevs[i], &deviceProperties);
@@ -290,7 +296,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   // Create queues
   float queuePriorities[] = {1.0f};
 
-  VkDeviceQueueCreateInfo queueCreateInfo;
+  VkDeviceQueueCreateInfo queueCreateInfo = {};
   queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
   queueCreateInfo.pNext = NULL;
   queueCreateInfo.flags = 0;
@@ -302,7 +308,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   std::vector<const char *> enabledDevExtensions;
   enabledDevExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-  VkDeviceCreateInfo devCreateInfo;
+  VkDeviceCreateInfo devCreateInfo = {};
   devCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   devCreateInfo.pNext = NULL;
   devCreateInfo.flags = 0;
@@ -321,8 +327,25 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
     return false;
   }
 
-// Set debug validation callback
+  // Create semaphores
+  VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+  semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+  semaphoreCreateInfo.pNext = NULL;
+  semaphoreCreateInfo.flags = 0;
+
+  if (vkCreateSemaphore(dev, &semaphoreCreateInfo, NULL,
+                        &acquireCompleteSemaphore) != VK_SUCCESS) {
+    std::cout << "Unable to create semaphore" << std::endl;
+    return false;
+  }
+  if (vkCreateSemaphore(dev, &semaphoreCreateInfo, NULL,
+                        &renderCompleteSemaphore) != VK_SUCCESS) {
+    std::cout << "Unable to create semaphore" << std::endl;
+    return false;
+  }
+
 #ifdef VOXL_DEBUG
+  // Set debug validation callback
   CreateDebugReportCallback =
       (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(
           instance, "vkCreateDebugReportCallbackEXT");
@@ -332,7 +355,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   dbgBreakCallback = (PFN_vkDebugReportMessageEXT)vkGetInstanceProcAddr(
       instance, "vkDebugReportMessageEXT");
 
-  VkDebugReportCallbackCreateInfoEXT dbgCreateInfo;
+  VkDebugReportCallbackCreateInfoEXT dbgCreateInfo = {};
   dbgCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
   dbgCreateInfo.pfnCallback = (PFN_vkDebugReportCallbackEXT)messageCallback;
   dbgCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT |
@@ -346,9 +369,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
 #endif
 
   // Get queues
-  vkGetDeviceQueue(dev, graphicsQueueIndex, 0, &graphicsQueue);
-  vkGetDeviceQueue(dev, presentQueueIndex, 0, &presentQueue);
-
+  vkGetDeviceQueue(dev, graphicsQueueIndex, 0, &queue);
   // Create window
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -365,7 +386,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   }
 
   // Get surface capabilities
-  VkSurfaceCapabilitiesKHR surfCapabilities;
+  VkSurfaceCapabilitiesKHR surfCapabilities = {};
   if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
           physDevs[0], surf, &surfCapabilities) != VK_SUCCESS) {
     std::cout << "Unable to get device surface capabilities" << std::endl;
@@ -466,7 +487,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   }
 
   // Create swapchain
-  VkSwapchainCreateInfoKHR swapchainCreateInfo;
+  VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
   swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
   swapchainCreateInfo.pNext = NULL;
   swapchainCreateInfo.flags = 0;
@@ -476,7 +497,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   swapchainCreateInfo.imageColorSpace = colorSpace;
   swapchainCreateInfo.imageExtent = surfCapabilities.currentExtent;
   swapchainCreateInfo.imageArrayLayers = 1;
-  swapchainCreateInfo.imageUsage = swapchainUsageFlags;
+  swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
   swapchainCreateInfo.queueFamilyIndexCount = 0;
   swapchainCreateInfo.pQueueFamilyIndices = NULL;
@@ -484,7 +505,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
   swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
   swapchainCreateInfo.presentMode = presentMode;
   swapchainCreateInfo.clipped = VK_TRUE;
-  swapchainCreateInfo.oldSwapchain = NULL;
+  swapchainCreateInfo.oldSwapchain = swapchain;
 
   VkResult result =
       vkCreateSwapchainKHR(dev, &swapchainCreateInfo, NULL, &swapchain);
@@ -493,43 +514,7 @@ bool VkContext::CreateSwapchain(const char *title, int width, int height) {
     return false;
   }
 
-  return true;
-}
-
-bool VkContext::CreateSemaphores() {
-  // Create semaphores
-  VkSemaphoreCreateInfo semaphoreCreateInfo;
-  semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-  semaphoreCreateInfo.pNext = NULL;
-  semaphoreCreateInfo.flags = 0;
-  if (vkCreateSemaphore(dev, &semaphoreCreateInfo, NULL,
-                        &acquireCompleteSemaphore) != VK_SUCCESS) {
-    std::cout << "Unable to create semaphore" << std::endl;
-    return false;
-  }
-  if (vkCreateSemaphore(dev, &semaphoreCreateInfo, NULL,
-                        &renderCompleteSemaphore) != VK_SUCCESS) {
-    std::cout << "Unable to create semaphore" << std::endl;
-    return false;
-  }
-
-  return true;
-}
-
-bool VkContext::CreateCommandBuffers() {
-  // Create command pool for buffer allocation
-  VkCommandPoolCreateInfo commandPoolCreateInfo;
-  commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  commandPoolCreateInfo.pNext = NULL;
-  commandPoolCreateInfo.flags = 0;
-  commandPoolCreateInfo.queueFamilyIndex = presentQueueIndex;
-
-  if (vkCreateCommandPool(dev, &commandPoolCreateInfo, NULL, &commandPool) !=
-      VK_SUCCESS) {
-    std::cout << "Unable to create present command pool" << std::endl;
-    return false;
-  }
-
+  // Get number of swapchain images
   uint32_t imageCount = 0;
   if (vkGetSwapchainImagesKHR(dev, swapchain, &imageCount, NULL) !=
       VK_SUCCESS) {
@@ -537,19 +522,274 @@ bool VkContext::CreateCommandBuffers() {
     return false;
   }
 
-  graphicsCmdBuffers.resize(imageCount);
+  // Get swapchain images
+  swapchainImages.resize(imageCount);
+  if (vkGetSwapchainImagesKHR(dev, swapchain, &imageCount,
+                              &swapchainImages[0]) != VK_SUCCESS) {
+    std::cout << "Unable to get swapchain images" << std::endl;
+    return false;
+  }
 
-  VkCommandBufferAllocateInfo commandBufferAllocateInfo;
+  return true;
+}
+
+bool VkContext::CreateCommandPool() {
+  // Create command pool for buffer allocation
+  VkCommandPoolCreateInfo commandPoolCreateInfo = {};
+  commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+  commandPoolCreateInfo.pNext = NULL;
+  commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+  commandPoolCreateInfo.queueFamilyIndex = graphicsQueueIndex;
+
+  if (vkCreateCommandPool(dev, &commandPoolCreateInfo, NULL, &commandPool) !=
+      VK_SUCCESS) {
+    std::cout << "Unable to create present command pool" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool VkContext::CreateSetupCommandBuffer() {
+  // Allocate setup command buffer
+  VkCommandBufferAllocateInfo commandBufferAllocateInfo = {};
   commandBufferAllocateInfo.sType =
       VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   commandBufferAllocateInfo.pNext = NULL;
   commandBufferAllocateInfo.commandPool = commandPool;
   commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  commandBufferAllocateInfo.commandBufferCount = imageCount;
+  commandBufferAllocateInfo.commandBufferCount = 1;
 
   if (vkAllocateCommandBuffers(dev, &commandBufferAllocateInfo,
-                               &graphicsCmdBuffers[0]) != VK_SUCCESS) {
-    std::cout << "Unable to allocate command buffers" << std::endl;
+                               &setupCmdBuffer) != VK_SUCCESS) {
+    std::cout << "Unable to allocate setup command buffer" << std::endl;
+    return false;
+  }
+
+  // Build setup command buffer
+  VkCommandBufferBeginInfo beginInfo = {};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.pNext = NULL;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+  beginInfo.pInheritanceInfo = NULL;
+
+  VkImageSubresourceRange subresourceRange = {};
+  subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  subresourceRange.baseMipLevel = 0;
+  subresourceRange.levelCount = 1;
+  subresourceRange.baseArrayLayer = 0;
+  subresourceRange.layerCount = 1;
+
+  VkImageMemoryBarrier memoryBarrier = {};
+  memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  memoryBarrier.pNext = NULL;
+  memoryBarrier.srcAccessMask = 0;
+  memoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+  memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  memoryBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+  memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  memoryBarrier.subresourceRange = subresourceRange;
+  memoryBarrier.image = NULL;
+
+  vkBeginCommandBuffer(setupCmdBuffer, &beginInfo);
+
+  for (int i = 0; i < swapchainImages.size(); i++) {
+    memoryBarrier.image = swapchainImages[i];
+
+    vkCmdPipelineBarrier(setupCmdBuffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, NULL, 0, NULL,
+                         1, &memoryBarrier);
+  }
+
+  if (vkEndCommandBuffer(setupCmdBuffer) != VK_SUCCESS) {
+    std::cout << "Unable to end command buffer" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool VkContext::FlushSetupCommandBuffer() {
+  VkSubmitInfo submitInfo = {};
+  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submitInfo.pNext = NULL;
+  submitInfo.commandBufferCount = 1;
+  submitInfo.pCommandBuffers = &setupCmdBuffer;
+  submitInfo.waitSemaphoreCount = 0;
+  submitInfo.pWaitSemaphores = NULL;
+  submitInfo.signalSemaphoreCount = 0;
+  submitInfo.pSignalSemaphores = NULL;
+
+  if (vkQueueSubmit(queue, 1, &submitInfo, NULL) != VK_SUCCESS) {
+    std::cout << "Unable to submit queues" << std::endl;
+    return false;
+  }
+
+  if (vkQueueWaitIdle(queue) != VK_SUCCESS) {
+    std::cout << "Unable to wait for queue to idle" << std::endl;
+    return false;
+  }
+
+  vkFreeCommandBuffers(dev, commandPool, 1, &setupCmdBuffer);
+
+  return true;
+}
+
+bool VkContext::CreatePresentCommandBuffers() {
+  VkCommandBufferAllocateInfo commandBufferAllocateInfo = {};
+  commandBufferAllocateInfo.sType =
+      VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+  commandBufferAllocateInfo.pNext = NULL;
+  commandBufferAllocateInfo.commandPool = commandPool;
+  commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  commandBufferAllocateInfo.commandBufferCount = 1;
+
+  if (vkAllocateCommandBuffers(dev, &commandBufferAllocateInfo,
+                               &prePresentCmdBuffer) != VK_SUCCESS) {
+    std::cout << "Unable to allocate pre present command buffer" << std::endl;
+    return false;
+  }
+
+  if (vkAllocateCommandBuffers(dev, &commandBufferAllocateInfo,
+                               &postPresentCmdBuffer) != VK_SUCCESS) {
+    std::cout << "Unable to allocate post present command buffer" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool VkContext::CreateDrawCommandBuffers() {
+  // Create a draw command bufffer for each swapchain image
+  drawCmdBuffers.resize(swapchainImages.size());
+
+  VkCommandBufferAllocateInfo commandBufferAllocateInfo = {};
+  commandBufferAllocateInfo.sType =
+      VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+  commandBufferAllocateInfo.pNext = NULL;
+  commandBufferAllocateInfo.commandPool = commandPool;
+  commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  commandBufferAllocateInfo.commandBufferCount =
+      (uint32_t)swapchainImages.size();
+
+  if (vkAllocateCommandBuffers(dev, &commandBufferAllocateInfo,
+                               &drawCmdBuffers[0]) != VK_SUCCESS) {
+    std::cout << "Unable to allocate draw command buffers" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool VkContext::PrePresentBarrier(VkImage image) {
+  VkCommandBufferBeginInfo beginInfo = {};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.pNext = NULL;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+  beginInfo.pInheritanceInfo = NULL;
+
+  if (vkBeginCommandBuffer(prePresentCmdBuffer, &beginInfo) != VK_SUCCESS) {
+    std::cout << "Unable to begin command buffer" << std::endl;
+  }
+
+  VkImageSubresourceRange subresourceRange = {};
+  subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  subresourceRange.baseMipLevel = 0;
+  subresourceRange.levelCount = 1;
+  subresourceRange.baseArrayLayer = 0;
+  subresourceRange.layerCount = 1;
+
+  VkImageMemoryBarrier memoryBarrier = {};
+  memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  memoryBarrier.pNext = NULL;
+  memoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+  memoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+  memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  memoryBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+  memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  memoryBarrier.subresourceRange = subresourceRange;
+  memoryBarrier.image = image;
+
+  vkCmdPipelineBarrier(prePresentCmdBuffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                       VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, NULL, 0, NULL,
+                       1, &memoryBarrier);
+
+  if (vkEndCommandBuffer(prePresentCmdBuffer) != VK_SUCCESS) {
+    std::cout << "Unable to end command buffer" << std::endl;
+    return false;
+  }
+
+  VkSubmitInfo submitInfo = {};
+  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submitInfo.pNext = NULL;
+  submitInfo.commandBufferCount = 1;
+  submitInfo.pCommandBuffers = &prePresentCmdBuffer;
+  submitInfo.waitSemaphoreCount = 0;
+  submitInfo.pWaitSemaphores = NULL;
+  submitInfo.signalSemaphoreCount = 0;
+  submitInfo.pSignalSemaphores = NULL;
+
+  if (vkQueueSubmit(queue, 1, &submitInfo, NULL) != VK_SUCCESS) {
+    std::cout << "Unable to submit queues" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool VkContext::PostPresentBarrier(VkImage image) {
+  VkCommandBufferBeginInfo beginInfo = {};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.pNext = NULL;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+  beginInfo.pInheritanceInfo = NULL;
+
+  if (vkBeginCommandBuffer(postPresentCmdBuffer, &beginInfo) != VK_SUCCESS) {
+    std::cout << "Unable to begin command buffer" << std::endl;
+  }
+
+  VkImageSubresourceRange subresourceRange = {};
+  subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  subresourceRange.baseMipLevel = 0;
+  subresourceRange.levelCount = 1;
+  subresourceRange.baseArrayLayer = 0;
+  subresourceRange.layerCount = 1;
+
+  VkImageMemoryBarrier memoryBarrier = {};
+  memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  memoryBarrier.pNext = NULL;
+  memoryBarrier.srcAccessMask = 0;
+  memoryBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+  memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+  memoryBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  memoryBarrier.subresourceRange = subresourceRange;
+  memoryBarrier.image = image;
+
+  vkCmdPipelineBarrier(postPresentCmdBuffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                       VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, NULL, 0, NULL,
+                       1, &memoryBarrier);
+
+  if (vkEndCommandBuffer(postPresentCmdBuffer) != VK_SUCCESS) {
+    std::cout << "Unable to end command buffer" << std::endl;
+    return false;
+  }
+
+  VkSubmitInfo submitInfo = {};
+  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submitInfo.pNext = NULL;
+  submitInfo.commandBufferCount = 1;
+  submitInfo.pCommandBuffers = &postPresentCmdBuffer;
+  submitInfo.waitSemaphoreCount = 0;
+  submitInfo.pWaitSemaphores = NULL;
+  submitInfo.signalSemaphoreCount = 0;
+  submitInfo.pSignalSemaphores = NULL;
+
+  if (vkQueueSubmit(queue, 1, &submitInfo, NULL) != VK_SUCCESS) {
+    std::cout << "Unable to submit queues" << std::endl;
     return false;
   }
 

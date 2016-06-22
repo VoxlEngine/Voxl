@@ -30,7 +30,7 @@ void Game::start() {
     lastTime = curTime;
 
     renderer.Render();
-    std::cout << "FPS: " << 1000.0f / (delta * 1000.0f) << std::endl;
+    // std::cout << "FPS: " << 1000.0f / (delta * 1000.0f) << std::endl;
   }
 }
 }
