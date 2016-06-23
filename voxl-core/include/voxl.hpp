@@ -11,10 +11,10 @@
 // that all other definitions are undefined/commented
 
 // Use OpenGL for graphics
-// #define VOXL_API_GL
+#define VOXL_API_GL
 
 // Use Vulkan for graphics
-#define VOXL_API_VK
+// #define VOXL_API_VK
 
 // Debug
 // This will enable/disable various features such as debug logging, Vulkan
@@ -30,10 +30,20 @@
 // This controls platform-specific components of the engine
 #ifdef _WIN32
 #define VOXL_WINDOWS
-#elif __linux__
+#elif defined(__linux__)
 #define VOXL_LINUX
-#elif __ANDROID__
+#elif defined(__ANDROID__)
 #define VOXL_ANDROID
 #endif
+
+// Standard includes
+#ifdef VOXL_LINUX
+#include <unistd.h>
+#endif
+
+#ifdef VOXL_WINDOWS
+#include <windows.h>
+#endif
+
 
 #endif

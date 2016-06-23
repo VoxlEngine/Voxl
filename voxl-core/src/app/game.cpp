@@ -2,14 +2,6 @@
 
 #include <iostream>
 
-#ifndef VOXL_LINUX
-#include <unistd.h>
-#endif
-
-#ifdef VOXL_WINDOWS
-#include <windows.h>
-#endif
-
 #include "graphics/commands/clearcommand.hpp"
 #include "math/vec4.hpp"
 

@@ -1,5 +1,9 @@
 project(voxl-core)
 
+include_directories(include)
+
+FILE(GLOB_RECURSE VOXL_HEADERS "include/*.hpp")
+
 add_library(voxl
   src/app/game.cpp
   src/graphics/commands/clearcommand.cpp

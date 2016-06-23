@@ -39,7 +39,9 @@ bool GlContext::Init(Config config) {
 
 void GlContext::Destroy() { glfwTerminate(); }
 
-void GlContext::Swap() { glfwSwapBuffers(window); }
+void GlContext::StartFrame() {}
+
+void GlContext::EndFrame() { glfwSwapBuffers(window); }
 }
 }
 }

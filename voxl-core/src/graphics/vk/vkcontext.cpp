@@ -44,7 +44,7 @@ VkBool32 messageCallback(VkDebugReportFlagsEXT flags,
     prefix += "DEBUG ";
   }
 
-  std::cout << prefix << "at " << location << " [" << pLayerPrefix << "] Code "
+  std::cout << prefix.c_str() << "at " << location << " [" << pLayerPrefix << "] Code "
             << msgCode << " : " << pMsg << std::endl;
 
   return VK_FALSE;
