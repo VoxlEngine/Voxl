@@ -1,13 +1,10 @@
 branches:
     only:
         - master
-environment:
-    matrix:
-        - BUILD_SHARED_LIBS: ON
-        - BUILD_SHARED_LIBS: OFF
 matrix:
     fast_finish: true
 build_script:
+	- git submodule update --init --recursive
     - mkdir build
     - cd build
     - cmake ..
