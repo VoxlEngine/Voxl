@@ -4,12 +4,12 @@
 #include "graphics/context.hpp"
 
 namespace voxl {
-namespace graphics {
-class RenderCommand {
-public:
-  virtual bool Execute(Context *context) = 0;
-};
-}
+	namespace graphics {
+		class RenderCommand {
+		public:
+			virtual bool Execute(Context *context) = 0;
+		};
+	}
 }
 
 #endif

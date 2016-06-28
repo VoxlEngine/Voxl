@@ -9,13 +9,15 @@
 #include "voxl.hpp"
 
 namespace voxl {
-namespace graphics {
-namespace vk {
-void SetImageLayout(VkCommandBuffer buffer, VkImage image,
-                    VkImageSubresourceRange subresourceRange,
-                    VkImageLayout oldLayout, VkImageLayout newLayout);
-}
-}
+	namespace graphics {
+		namespace vk {
+			void SetImageLayout(VkCommandBuffer buffer, VkImage image,
+				VkImageSubresourceRange subresourceRange,
+				VkImageLayout oldLayout, VkImageLayout newLayout);
+
+			void CheckVkResult(VkResult res);
+		}
+	}
 }
 
 #endif

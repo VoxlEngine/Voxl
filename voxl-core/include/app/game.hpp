@@ -7,19 +7,19 @@
 #include "graphics/renderer.hpp"
 
 namespace voxl {
-namespace app {
-class Game {
-public:
-  Game(Config config);
+	namespace app {
+		class Game {
+		public:
+			Game(Config config);
 
-  void start();
+			void start();
 
-private:
-  graphics::Renderer renderer;
+		private:
+			graphics::Renderer renderer;
 
-  int frameCount;
-};
-}
+			int frameCount;
+		};
+	}
 }
 
 #endif

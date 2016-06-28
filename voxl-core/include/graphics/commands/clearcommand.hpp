@@ -13,18 +13,18 @@
 #include "math/vec4.hpp"
 
 namespace voxl {
-namespace graphics {
-namespace commands {
-class ClearCommand : public RenderCommand {
-public:
-  ClearCommand(math::Vec4 clearColor);
-  bool Execute(Context *context);
+	namespace graphics {
+		namespace commands {
+			class ClearCommand : public RenderCommand {
+			public:
+				ClearCommand(math::Vec4 clearColor);
+				bool Execute(Context *context);
 
-private:
-  math::Vec4 color;
-};
-}
-}
+			private:
+				math::Vec4 color;
+			};
+		}
+	}
 }
 
 #endif

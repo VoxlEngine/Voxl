@@ -1,10 +1,10 @@
 branches:
-    only:
-        - master
+  only:
+    - master
 matrix:
     fast_finish: true
 build_script:
-	- git submodule update --init --recursive
+    - git submodule update --init --recursive
     - mkdir build
     - cd build
     - cmake ..

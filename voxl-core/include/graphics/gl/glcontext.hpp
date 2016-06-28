@@ -14,19 +14,19 @@
 #include "graphics/context.hpp"
 
 namespace voxl {
-namespace graphics {
-namespace gl {
-class GlContext : public Context {
-public:
-  bool Init(Config config);
-  void Destroy();
-  void StartFrame();
-  void EndFrame();
+	namespace graphics {
+		namespace gl {
+			class GlContext : public Context {
+			public:
+				bool Init(Config config);
+				void Destroy();
+				void StartFrame();
+				void EndFrame();
 
-  GLFWwindow *window;
-};
-}
-}
+				GLFWwindow *window;
+			};
+		}
+	}
 }
 
 #endif

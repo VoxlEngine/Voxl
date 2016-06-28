@@ -9,12 +9,12 @@ using namespace voxl;
 using namespace voxl::app;
 
 int main() {
-  Config config;
-  config.windowWidth = 1336;
-  config.windowHeight = 768;
-  config.windowTitle = "Voxl Example";
+	Config config;
+	config.windowWidth = 1336;
+	config.windowHeight = 768;
+	config.windowTitle = "Voxl Example";
 
-  Game game(config);
-  game.start();
-  return 0;
+	Game game(config);
+	game.start();
+	return 0;
 }

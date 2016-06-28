@@ -15,30 +15,30 @@
 #endif
 
 namespace voxl {
-namespace graphics {
-class Renderer {
-public:
-  Renderer(Config config);
-  ~Renderer();
+	namespace graphics {
+		class Renderer {
+		public:
+			Renderer(Config config);
+			~Renderer();
 
-  void Render();
+			void Render();
 
-  void Submit(RenderCommand *command);
+			void Submit(RenderCommand *command);
 
-  inline GLFWwindow *getWindow() { return context.window; };
+			inline GLFWwindow *getWindow() { return context.window; };
 
-private:
+		private:
 #ifdef VOXL_API_VK
-  vk::VkContext context;
+			vk::VkContext context;
 #elif defined(VOXL_API_GL)
-  gl::GlContext context;
+			gl::GlContext context;
 #endif
 
-  std::vector<RenderCommand *> commands;
+			std::vector<RenderCommand *> commands;
 
-  void ClearCommands();
-};
-}
+			void ClearCommands();
+		};
+	}
 }
 
 #endif

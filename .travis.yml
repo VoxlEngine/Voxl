@@ -1,11 +1,11 @@
 language: cpp
 addons:
-	apt:
-		packages:
-			- cmake
+  apt:
+    packages:
+      - cmake
 script:
-	- git submodule update --init --recursive
-	- mkdir build
-	- cd build
-	- cmake ..
-	- cmake --build .
+   - git submodule update --init --recursive
+   - mkdir build
+   - cd build
+   - cmake ..
+   - cmake --build .
