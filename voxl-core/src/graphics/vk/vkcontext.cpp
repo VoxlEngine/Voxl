@@ -496,73 +496,23 @@ namespace voxl {
 
 				CheckVkResult(vkAllocateCommandBuffers(dev, &allocateInfo, drawCmdBuffers.data()));
 
-				// Allocate present buffers
-				allocateInfo.commandBufferCount = 1;
-				CheckVkResult(vkAllocateCommandBuffers(dev, &allocateInfo, &prePresentCmdBuffer));
-				CheckVkResult(vkAllocateCommandBuffers(dev, &allocateInfo, &postPresentCmdBuffer));
+				// Subresource range for clearing image
+				VkImageSubresourceRange subresourceRange = {};
+				subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				subresourceRange.baseMipLevel = 0;
+				subresourceRange.levelCount = 1;
+				subresourceRange.baseArrayLayer = 0;
+				subresourceRange.layerCount = 1;
 
-				// Record command buffers
-
-				// Prepare data for recording command buffers
-				VkCommandBufferBeginInfo beginInfo = {};
-				beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-				beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-				// Note: contains value for each subresource range
-				VkClearColorValue clearColor = {
-					{ 0.1f, 0.1f, 0.1f, 1.0f } // R, G, B, A
-				};
-
-				VkImageSubresourceRange subResourceRange = {};
-				subResourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				subResourceRange.baseMipLevel = 0;
-				subResourceRange.levelCount = 1;
-				subResourceRange.baseArrayLayer = 0;
-				subResourceRange.layerCount = 1;
+				VkClearColorValue clearColor = { {0.23f, 0.9f, 0.3f, 1.0f} };
 
 				// Record the command buffer for every swap chain image
 				for (uint32_t i = 0; i < swapchainImages.size(); i++) {
-					// Change layout of image to be optimal for clearing
-					// Note: previous layout doesn't matter, which will likely cause contents to be discarded
-					VkImageMemoryBarrier presentToClearBarrier = {};
-					presentToClearBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-					presentToClearBarrier.srcAccessMask = 0;
-					presentToClearBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-					presentToClearBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-					presentToClearBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-					presentToClearBarrier.srcQueueFamilyIndex = queueIndex;
-					presentToClearBarrier.dstQueueFamilyIndex = queueIndex;
-					presentToClearBarrier.image = swapchainImages[i];
-					presentToClearBarrier.subresourceRange = subResourceRange;
+					BeginDrawBuffer(drawCmdBuffers[i], swapchainImages[i]);
 
-					// Change layout of image to be optimal for presenting
-					VkImageMemoryBarrier clearToPresentBarrier = {};
-					clearToPresentBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-					clearToPresentBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-					clearToPresentBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-					clearToPresentBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-					clearToPresentBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-					clearToPresentBarrier.srcQueueFamilyIndex = queueIndex;
-					clearToPresentBarrier.dstQueueFamilyIndex = queueIndex;
-					clearToPresentBarrier.image = swapchainImages[i];
-					clearToPresentBarrier.subresourceRange = subResourceRange;
+					vkCmdClearColorImage(drawCmdBuffers[i], swapchainImages[i], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &subresourceRange);
 
-					// Record command buffer
-					vkBeginCommandBuffer(drawCmdBuffers[i], &beginInfo);
-
-					vkCmdPipelineBarrier(drawCmdBuffers[i], VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &presentToClearBarrier);
-
-					vkCmdClearColorImage(drawCmdBuffers[i], swapchainImages[i], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &subResourceRange);
-
-					vkCmdPipelineBarrier(drawCmdBuffers[i], VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &clearToPresentBarrier);
-
-					if (vkEndCommandBuffer(drawCmdBuffers[i]) != VK_SUCCESS) {
-						std::cerr << "failed to record command buffer" << std::endl;
-						exit(1);
-					}
-					else {
-						std::cout << "recorded command buffer for image " << i << std::endl;
-					}
+					EndDrawBuffer(drawCmdBuffers[i], swapchainImages[i]);
 				}
 
 				return true;
@@ -576,10 +526,6 @@ namespace voxl {
 					vkFreeCommandBuffers(dev, cmdPool, (uint32_t)drawCmdBuffers.size(),
 						&drawCmdBuffers[0]);
 				}
-
-				// Free present command buffers
-				vkFreeCommandBuffers(dev, cmdPool, 1, &prePresentCmdBuffer);
-				vkFreeCommandBuffers(dev, cmdPool, 1, &postPresentCmdBuffer);
 
 				// Destroy command pools
 				vkDestroyCommandPool(dev, cmdPool, nullptr);
@@ -627,9 +573,6 @@ namespace voxl {
 			void VkContext::StartFrame() {
 				// Acquire next image
 				CheckVkResult(vkAcquireNextImageKHR(dev, swapchain, UINT64_MAX, acquireCompleteSemaphore, VK_NULL_HANDLE, &currentImage));
-
-				// Convert current image from present layout to color layout
-				// PostPresentBarrier(swapchainImages[currentImage]);
 			}
 
 			void VkContext::EndFrame() {
@@ -656,9 +599,6 @@ namespace voxl {
 					std::cout << "Unable to submit command buffer" << std::endl;
 				}
 
-				// Convert current image from color layout to present layout
-				// PrePresentBarrier(swapchainImages[currentImage]);
-
 				VkPresentInfoKHR presentInfo = {};
 				presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 				presentInfo.pNext = nullptr;
@@ -671,11 +611,37 @@ namespace voxl {
 				CheckVkResult(vkQueuePresentKHR(queue, &presentInfo));
 			}
 
-			bool VkContext::PrePresentBarrier(VkImage image) {
+			void VkContext::BeginDrawBuffer(VkCommandBuffer cmdBuffer, VkImage image) {
 				VkCommandBufferBeginInfo beginInfo = {};
 				beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 				beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
+				VkImageSubresourceRange subresourceRange = {};
+				subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				subresourceRange.baseMipLevel = 0;
+				subresourceRange.levelCount = 1;
+				subresourceRange.baseArrayLayer = 0;
+				subresourceRange.layerCount = 1;
+
+				VkImageMemoryBarrier memoryBarrier = {};
+				memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				memoryBarrier.srcAccessMask = 0;
+				memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+				memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				memoryBarrier.srcQueueFamilyIndex = queueIndex;
+				memoryBarrier.dstQueueFamilyIndex = queueIndex;
+				memoryBarrier.image = image;
+				memoryBarrier.subresourceRange = subresourceRange;
+
+				// Begin command buffer
+				vkBeginCommandBuffer(cmdBuffer, &beginInfo);
+
+				// Change image layout to transfer dst optimal
+				vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+			}
+
+			void VkContext::EndDrawBuffer(VkCommandBuffer cmdBuffer, VkImage image) {
 				VkImageSubresourceRange subresourceRange = {};
 				subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 				subresourceRange.baseMipLevel = 0;
@@ -693,72 +659,12 @@ namespace voxl {
 				memoryBarrier.dstQueueFamilyIndex = queueIndex;
 				memoryBarrier.image = image;
 				memoryBarrier.subresourceRange = subresourceRange;
-
-				vkBeginCommandBuffer(prePresentCmdBuffer, &beginInfo);
-
-				vkCmdPipelineBarrier(prePresentCmdBuffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, NULL, 0, NULL, 1, &memoryBarrier);
-
-				CheckVkResult(vkEndCommandBuffer(prePresentCmdBuffer));
-
-				VkSubmitInfo submitInfo = {};
-				submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-				submitInfo.pNext = NULL;
-				submitInfo.commandBufferCount = 1;
-				submitInfo.pCommandBuffers = &prePresentCmdBuffer;
-				submitInfo.waitSemaphoreCount = 0;
-				submitInfo.pWaitSemaphores = NULL;
-				submitInfo.signalSemaphoreCount = 0;
-				submitInfo.pSignalSemaphores = NULL;
-
-				CheckVkResult(vkQueueSubmit(queue, 1, &submitInfo, NULL));
-
-				return true;
-			}
-
-			bool VkContext::PostPresentBarrier(VkImage image) {
-				VkCommandBufferBeginInfo beginInfo = {};
-				beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-				beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-
-				VkImageSubresourceRange subresourceRange = {};
-				subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				subresourceRange.baseMipLevel = 0;
-				subresourceRange.levelCount = 1;
-				subresourceRange.baseArrayLayer = 0;
-				subresourceRange.layerCount = 1;
-
-				VkImageMemoryBarrier memoryBarrier = {};
-				memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-				memoryBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-				memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-				memoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-				memoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-				memoryBarrier.srcQueueFamilyIndex = queueIndex;
-				memoryBarrier.dstQueueFamilyIndex = queueIndex;
-				memoryBarrier.image = image;
-				memoryBarrier.subresourceRange = subresourceRange;
-
-				vkBeginCommandBuffer(postPresentCmdBuffer, &beginInfo);
-
-				vkCmdPipelineBarrier(postPresentCmdBuffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, NULL, 0, NULL, 1, &memoryBarrier);
-
-				CheckVkResult(vkEndCommandBuffer(postPresentCmdBuffer));
-
-				VkSubmitInfo submitInfo = {};
-				submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-				submitInfo.pNext = NULL;
-				submitInfo.commandBufferCount = 1;
-				submitInfo.pCommandBuffers = &postPresentCmdBuffer;
-				submitInfo.waitSemaphoreCount = 0;
-				submitInfo.pWaitSemaphores = NULL;
-				submitInfo.signalSemaphoreCount = 0;
-				submitInfo.pSignalSemaphores = NULL;
-
-				CheckVkResult(vkQueueSubmit(queue, 1, &submitInfo, NULL));
-
-				return true;
+				
+				// Change image layout to present
+				vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+			
+				// End command buffer
+				CheckVkResult(vkEndCommandBuffer(cmdBuffer));
 			}
 		}
 	}

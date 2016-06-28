@@ -40,10 +40,6 @@ namespace voxl {
 
 				VkCommandPool cmdPool;
 
-				VkCommandBuffer setupCmdBuffer;
-				VkCommandBuffer prePresentCmdBuffer;
-				VkCommandBuffer postPresentCmdBuffer;
-
 				std::vector<VkCommandBuffer> drawCmdBuffers;
 
 			private:
@@ -59,8 +55,8 @@ namespace voxl {
 				bool CreateSwapchain(int width, int height);
 				bool CreateCommandPool();
 				bool CreateCommandBuffers();
-				bool PrePresentBarrier(VkImage image);
-				bool PostPresentBarrier(VkImage image);
+				void BeginDrawBuffer(VkCommandBuffer cmdBuffer, VkImage image);
+				void EndDrawBuffer(VkCommandBuffer cmdBuffer, VkImage image);
 
 #ifdef VOXL_DEBUG
 				PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = VK_NULL_HANDLE;
