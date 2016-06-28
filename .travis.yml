@@ -4,8 +4,8 @@ addons:
     packages:
       - cmake
 script:
-   - git submodule update --init --recursive
-   - mkdir build
-   - cd build
-   - cmake ..
-   - cmake --build .
+  - git submodule update --init --recursive
+  - mkdir build
+  - cd build
+  - cmake ..
+  - cmake --build.
