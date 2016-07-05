@@ -5,7 +5,6 @@ include_directories(include)
 add_library(voxl
 	# Sources
 	src/app/game.cpp
-	src/graphics/commands/clearcommand.cpp
 	src/graphics/gl/glcontext.cpp
 	src/graphics/renderer.cpp
 	src/graphics/vk/util.cpp
@@ -18,10 +17,8 @@ add_library(voxl
 	# Headers
 	include/app/game.hpp
 	include/config.hpp
-	include/graphics/commands/clearcommand.hpp
 	include/graphics/context.hpp
 	include/graphics/gl/glcontext.hpp
-	include/graphics/rendercommand.hpp
 	include/graphics/renderer.hpp
 	include/graphics/vk/util.hpp
 	include/graphics/vk/vkcontext.hpp

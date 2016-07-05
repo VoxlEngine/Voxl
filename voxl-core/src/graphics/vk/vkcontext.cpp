@@ -1,3 +1,20 @@
+/*
+* Voxl Game Engine
+* Copyright 2016 Sam H.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*    http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
 #include <cstring>
 #include <iostream>
 #include <vector>
@@ -161,7 +178,7 @@ namespace voxl {
 #endif
 
 				// Add GLFW extensions
-				uint32_t glfwExtensionCount = 0;
+				uint32 glfwExtensionCount = 0;
 				const char **glfwExtensions =
 					glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 				for (int i = 0; i < glfwExtensionCount; i++) {
@@ -173,9 +190,9 @@ namespace voxl {
 				instanceInfo.pNext = nullptr;
 				instanceInfo.flags = 0;
 				instanceInfo.pApplicationInfo = &appInfo;
-				instanceInfo.enabledExtensionCount = (uint32_t)instanceExtensions.size();
+				instanceInfo.enabledExtensionCount = (uint32)instanceExtensions.size();
 				instanceInfo.ppEnabledExtensionNames = instanceExtensions.data();
-				instanceInfo.enabledLayerCount = (uint32_t)instanceLayers.size();
+				instanceInfo.enabledLayerCount = (uint32)instanceLayers.size();
 				instanceInfo.ppEnabledLayerNames = instanceLayers.data();
 
 				CheckVkResult(vkCreateInstance(&instanceInfo, nullptr, &instance));
@@ -185,7 +202,7 @@ namespace voxl {
 
 			// TODO: Rewrite to find first device supporting all required extensions
 			bool VkContext::GetPhysicalDevice() {
-				uint32_t deviceCount = 1;
+				uint32 deviceCount = 1;
 
 				CheckVkResult(vkEnumeratePhysicalDevices(instance, &deviceCount, &physDev));
 
@@ -219,7 +236,7 @@ namespace voxl {
 			}
 
 			bool VkContext::GetQueueFamilies() {
-				uint32_t familyCount = 0;
+				uint32 familyCount = 0;
 				vkGetPhysicalDeviceQueueFamilyProperties(physDev, &familyCount, nullptr);
 
 				if (familyCount == 0) {
@@ -231,9 +248,9 @@ namespace voxl {
 				vkGetPhysicalDeviceQueueFamilyProperties(physDev, &familyCount, families.data());
 
 				// Get a queue with support for both graphics and present
-				uint32_t graphicsQueueIndex = UINT32_MAX;
-				uint32_t presentQueueIndex = UINT32_MAX;
-				for (uint32_t i = 0; i < familyCount; i++) {
+				uint32 graphicsQueueIndex = UINT32_MAX;
+				uint32 presentQueueIndex = UINT32_MAX;
+				for (uint32 i = 0; i < familyCount; i++) {
 					VkBool32 presentSupport = VK_FALSE;
 					vkGetPhysicalDeviceSurfaceSupportKHR(physDev, i, surf, &presentSupport);
 
@@ -289,9 +306,9 @@ namespace voxl {
 				deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 				deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
 				deviceCreateInfo.queueCreateInfoCount = 1;
-				deviceCreateInfo.enabledExtensionCount = (uint32_t)deviceExtensions.size();
+				deviceCreateInfo.enabledExtensionCount = (uint32)deviceExtensions.size();
 				deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
-				deviceCreateInfo.enabledLayerCount = (uint32_t)deviceLayers.size();
+				deviceCreateInfo.enabledLayerCount = (uint32)deviceLayers.size();
 				deviceCreateInfo.ppEnabledLayerNames = deviceLayers.data();
 
 				CheckVkResult(vkCreateDevice(physDev, &deviceCreateInfo, nullptr, &dev));
@@ -345,21 +362,21 @@ namespace voxl {
 				CheckVkResult(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physDev, surf, &surfaceCapabilities));
 
 				// Get surface formats
-				uint32_t formatCount = 0;
+				uint32 formatCount = 0;
 				CheckVkResult(vkGetPhysicalDeviceSurfaceFormatsKHR(physDev, surf, &formatCount, nullptr));
 
 				std::vector<VkSurfaceFormatKHR> formats(formatCount);
 				CheckVkResult(vkGetPhysicalDeviceSurfaceFormatsKHR(physDev, surf, &formatCount, formats.data()));
 
 				// Get present modes
-				uint32_t presentModeCount;
+				uint32 presentModeCount;
 				CheckVkResult(vkGetPhysicalDeviceSurfacePresentModesKHR(physDev, surf, &presentModeCount, nullptr));
 
 				std::vector<VkPresentModeKHR> presentModes(presentModeCount);
 				CheckVkResult(vkGetPhysicalDeviceSurfacePresentModesKHR(physDev, surf, &presentModeCount, presentModes.data()));
 
 				// Select number of swapchain images
-				uint32_t imageCount = surfaceCapabilities.minImageCount + 1;
+				uint32 imageCount = surfaceCapabilities.minImageCount + 1;
 				if (surfaceCapabilities.maxImageCount != 0 && imageCount > surfaceCapabilities.maxImageCount) {
 					imageCount = surfaceCapabilities.maxImageCount;
 				}
@@ -372,7 +389,7 @@ namespace voxl {
 					format.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
 				}
 				else {
-					for (uint32_t i = 0; i < formats.size(); i++)
+					for (uint32 i = 0; i < formats.size(); i++)
 					{
 						if (formats[i].format == VK_FORMAT_R8G8B8A8_UNORM) {
 							format = formats[i];
@@ -397,7 +414,7 @@ namespace voxl {
 				VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
 
 				// Choose mailbox if possible
-				for (uint32_t i = 0; i < presentModes.size(); i++)
+				for (uint32 i = 0; i < presentModes.size(); i++)
 				{
 					if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
 						presentMode = presentModes[i];
@@ -441,7 +458,7 @@ namespace voxl {
 				CheckVkResult(vkCreateSwapchainKHR(dev, &swapchainInfo, nullptr, &swapchain));
 
 				// Get swapchain images
-				uint32_t swapchainImageCount = 0;
+				uint32 swapchainImageCount = 0;
 				CheckVkResult(vkGetSwapchainImagesKHR(dev, swapchain, &swapchainImageCount, nullptr));
 
 				swapchainImages.resize(swapchainImageCount);
@@ -449,7 +466,7 @@ namespace voxl {
 
 				// Create swapchain image views
 				swapchainImageViews.resize(imageCount);
-				for (uint32_t i = 0; i < imageCount; i++) {
+				for (uint32 i = 0; i < imageCount; i++) {
 					VkImageViewCreateInfo imageViewCreateInfo = {};
 					imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 					imageViewCreateInfo.image = swapchainImages[i];
@@ -491,7 +508,7 @@ namespace voxl {
 				allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
 				// Allocate swapchain draw buffers
-				allocateInfo.commandBufferCount = (uint32_t)swapchainImages.size();
+				allocateInfo.commandBufferCount = (uint32)swapchainImages.size();
 				drawCmdBuffers.resize(swapchainImages.size());
 
 				CheckVkResult(vkAllocateCommandBuffers(dev, &allocateInfo, drawCmdBuffers.data()));
@@ -504,10 +521,10 @@ namespace voxl {
 				subresourceRange.baseArrayLayer = 0;
 				subresourceRange.layerCount = 1;
 
-				VkClearColorValue clearColor = { {0.23f, 0.9f, 0.3f, 1.0f} };
+				VkClearColorValue clearColor = { {0.0f, 0.0f, 0.0f, 1.0f} };
 
 				// Record the command buffer for every swap chain image
-				for (uint32_t i = 0; i < swapchainImages.size(); i++) {
+				for (uint32 i = 0; i < swapchainImages.size(); i++) {
 					BeginDrawBuffer(drawCmdBuffers[i], swapchainImages[i]);
 
 					vkCmdClearColorImage(drawCmdBuffers[i], swapchainImages[i], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &subresourceRange);
@@ -523,7 +540,7 @@ namespace voxl {
 
 				// Free command buffers
 				if (drawCmdBuffers.size() > 0) {
-					vkFreeCommandBuffers(dev, cmdPool, (uint32_t)drawCmdBuffers.size(),
+					vkFreeCommandBuffers(dev, cmdPool, (uint32)drawCmdBuffers.size(),
 						&drawCmdBuffers[0]);
 				}
 
@@ -535,7 +552,7 @@ namespace voxl {
 				vkDestroySemaphore(dev, renderCompleteSemaphore, nullptr);
 
 				// Destroy swapchain image views
-				for (uint32_t i = 0; i < swapchainImageViews.size(); i++) {
+				for (uint32 i = 0; i < swapchainImageViews.size(); i++) {
 					vkDestroyImageView(dev, swapchainImageViews[i], nullptr);
 				}
 
