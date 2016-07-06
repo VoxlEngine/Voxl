@@ -15,8 +15,7 @@
 * limitations under the License.
 */
 
-#ifndef VOXL_GRAPHICS_GL_CONTEXT_H_
-#define VOXL_GRAPHICS_GL_CONTEXT_H_
+#pragma once
 
 #include "voxl.hpp"
 #include <GLFW/glfw3.h>
@@ -48,5 +47,3 @@ namespace voxl {
 		}
 	}
 }
-
-#endif

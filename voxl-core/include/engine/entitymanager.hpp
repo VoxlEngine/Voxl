@@ -15,28 +15,22 @@
 * limitations under the License.
 */
 
-#include "app/game.hpp"
+#pragma once
 
-#include <iostream>
+#include <vector>
 
-#include "math/vec4.hpp"
+#include "engine/entity.hpp"
 
 namespace voxl {
-	namespace app {
-		Game::Game(Config config) : renderer(config) {}
-
-		void Game::start() {
-			double lastTime = glfwGetTime();
-
-			while (!glfwWindowShouldClose(renderer.GetWindow())) {
-				double curTime = glfwGetTime();
-				double delta = curTime - lastTime;
-				glfwPollEvents();
-				lastTime = curTime;
-
-				renderer.Render();
-				std::cout << "FPS: " << 1000.0f / (delta * 1000.0f) << std::endl;
-			}
-		}
+	namespace engine {
+		class EntityManager {
+		public:
+			Entity* CreateEntity();
+			Entity* GetEntityFromId(u64 id);
+			void DeleteEntity(Entity* entity);
+		private:
+			std::vector<Entity*> entities;
+			u64 nextId;
+		};
 	}
 }

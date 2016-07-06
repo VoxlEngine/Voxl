@@ -15,8 +15,7 @@
 * limitations under the License.
 */
 
-#ifndef VOXL_MATH_VEC2_H_
-#define VOXL_MATH_VEC2_H_
+#pragma once
 
 namespace voxl {
 	namespace math {
@@ -45,5 +44,3 @@ namespace voxl {
 		};
 	}
 }
-
-#endif

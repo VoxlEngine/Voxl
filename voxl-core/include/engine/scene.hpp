@@ -17,11 +17,15 @@
 
 #pragma once
 
+#include "engine/entitymanager.hpp"
+
 namespace voxl {
-	class Config {
-	public:
-		int windowWidth;
-		int windowHeight;
-		const char *windowTitle;
-	};
+	namespace engine {
+		class Scene {
+		public:
+			inline EntityManager* GetEntityManager() { return &entityManager; };
+		private:
+			EntityManager entityManager;
+		};
+	}
 }

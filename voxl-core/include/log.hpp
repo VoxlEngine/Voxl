@@ -15,27 +15,22 @@
 * limitations under the License.
 */
 
-#ifndef VOXL_GAME_H_
-#define VOXL_GAME_H_
+#pragma once
 
-#include "voxl.hpp"
+#ifndef VOXL_LOG_H_
+#define VOXL_LOG_H_
 
-#include "config.hpp"
-#include "graphics/renderer.hpp"
+#include <stdlib.h>
+#include <iostream>
 
 namespace voxl {
-	namespace app {
-		class Game {
-		public:
-			Game(Config config);
+	void LogError(const char* message) {
+		std::cout << "Voxl < FATAL ERROR < " << message;
+		exit(-1);
+	}
 
-			void start();
-
-		private:
-			graphics::Renderer renderer;
-
-			int frameCount;
-		};
+	void LogWarning(const char* message) {
+		std::cout << "Voxl < Warning < " << message;
 	}
 }
 

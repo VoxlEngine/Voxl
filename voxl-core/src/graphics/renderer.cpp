@@ -19,6 +19,8 @@
 #include <iostream>
 #include <vector>
 
+#include "voxl.hpp"
+
 #include "graphics/renderer.hpp"
 
 namespace voxl {

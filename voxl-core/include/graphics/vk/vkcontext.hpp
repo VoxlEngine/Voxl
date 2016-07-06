@@ -15,8 +15,7 @@
 * limitations under the License.
 */
 
-#ifndef VOXL_GRAPHICS_VK_CONTEXT_H_
-#define VOXL_GRAPHICS_VK_CONTEXT_H_
+#pragma once
 
 #define VULKAN_VERSION_MAJOR 1
 #define VULKAN_VERSION_MINOR 0
@@ -49,9 +48,9 @@ namespace voxl {
 				inline VkSwapchainKHR GetSwapchain() { return swapchain; };
 
 				VkQueue queue;
-				uint32 queueIndex;
+				u32 queueIndex;
 
-				uint32 currentImage;
+				u32 currentImage;
 
 				std::vector<VkImage> swapchainImages;
 				std::vector<VkImageView> swapchainImageViews;
@@ -100,5 +99,3 @@ namespace voxl {
 		}
 	}
 }
-
-#endif

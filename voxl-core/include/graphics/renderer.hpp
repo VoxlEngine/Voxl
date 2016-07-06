@@ -15,10 +15,9 @@
 * limitations under the License.
 */
 
-#ifndef VOXL_RENDERER_RENDERER_H_
-#define VOXL_RENDERER_RENDERER_H_
+#pragma once
 
-#include "voxl.hpp"
+//#include "voxl.hpp"
 #include <GLFW/glfw3.h>
 #include <vector>
 
@@ -48,5 +47,3 @@ namespace voxl {
 		};
 	}
 }
-
-#endif

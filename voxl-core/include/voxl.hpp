@@ -15,8 +15,7 @@
 * limitations under the License.
 */
 
-#ifndef VOXL_VOXL_H_
-#define VOXL_VOXL_H_
+#pragma once
 
 // Voxl Engine version
 #define VOXL_VERSION_MAJOR 0
@@ -28,10 +27,10 @@
 // that all other definitions are undefined/commented
 
 // Use OpenGL for graphics
-#define VOXL_API_GL
+// #define VOXL_API_GL
 
 // Use Vulkan for graphics
-// #define VOXL_API_VK
+#define VOXL_API_VK
 
 // Debug
 // This will enable/disable various features such as debug logging, Vulkan
@@ -40,15 +39,17 @@
 #define VOXL_DEBUG
 #endif
 
-
 // Platform definitions
 // This controls platform-specific components of the engine
 #ifdef _WIN32
 #define VOXL_WINDOWS
+#define VOXL_DESKTOP
 #elif defined(__linux__)
 #define VOXL_LINUX
+#define VOXL_DESKTOP
 #elif defined(__ANDROID__)
 #define VOXL_ANDROID
+#define VOXL_MOBILE
 #endif
 
 // Standard includes
@@ -60,4 +61,11 @@
 #include <windows.h>
 #endif
 
-#endif
+// Include integer types
+#include "types.hpp"
+
+// Include common engine files
+#include <config.hpp>
+#include <engine/entity.hpp>
+#include <engine/game.hpp>
+#include <engine/scene.hpp>

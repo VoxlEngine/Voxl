@@ -15,13 +15,13 @@
 * limitations under the License.
 */
 
-#pragma once
+
+#include "engine/entity.hpp"
 
 namespace voxl {
-	class Config {
-	public:
-		int windowWidth;
-		int windowHeight;
-		const char *windowTitle;
-	};
+	namespace engine {
+		Entity::Entity(u64 newId) {
+			id = newId;
+		}
+	}
 }

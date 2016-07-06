@@ -17,11 +17,23 @@
 
 #pragma once
 
+#include "voxl.hpp"
+
+#include "config.hpp"
+#include "graphics/renderer.hpp"
+
 namespace voxl {
-	class Config {
-	public:
-		int windowWidth;
-		int windowHeight;
-		const char *windowTitle;
-	};
+	namespace engine {
+		class Game {
+		public:
+			Game(Config config);
+
+			void start();
+
+		private:
+			graphics::Renderer renderer;
+
+			int frameCount;
+		};
+	}
 }

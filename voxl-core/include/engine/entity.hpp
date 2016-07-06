@@ -17,11 +17,18 @@
 
 #pragma once
 
+// #include "voxl.hpp"
+#include "types.hpp"
+
 namespace voxl {
-	class Config {
-	public:
-		int windowWidth;
-		int windowHeight;
-		const char *windowTitle;
-	};
+	namespace engine {
+		class Entity {
+		public:
+			Entity(u64 newId);
+
+			inline u64 GetId() { return id; };
+		private:
+			u64 id;
+		};
+	}
 }

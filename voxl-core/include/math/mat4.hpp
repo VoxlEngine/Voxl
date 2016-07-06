@@ -15,8 +15,7 @@
 * limitations under the License.
 */
 
-#ifndef VOXL_MATH_MAT4_H_
-#define VOXL_MATH_MAT4_H_
+#pragma once
 
 #include "types.hpp"
 
@@ -56,5 +55,3 @@ namespace voxl {
 		};
 	}
 }
-
-#endif

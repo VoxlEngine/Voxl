@@ -38,7 +38,6 @@ namespace voxl {
 				glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_VERSION_MINOR);
 				glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 				glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-				glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
 				window = glfwCreateWindow(config.windowWidth, config.windowHeight,
 					config.windowTitle, nullptr, nullptr);

@@ -15,11 +15,10 @@
 * limitations under the License.
 */
 
-#ifndef VOXL_GRAPHICS_CONTEXT_H_
-#define VOXL_GRAPHICS_CONTEXT_H_
+#pragma once
 
 #include "config.hpp"
-#include <GLFW\glfw3.h>
+#include <GLFW/glfw3.h>
 
 namespace voxl {
 	namespace graphics {
@@ -34,5 +33,3 @@ namespace voxl {
 		};
 	}
 }
-
-#endif

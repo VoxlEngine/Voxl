@@ -19,17 +19,18 @@
 
 #include <voxl.hpp>
 
-#include <app/game.hpp>
-#include <config.hpp>
-
 using namespace voxl;
-using namespace voxl::app;
+using namespace voxl::engine;
 
 int main() {
 	Config config;
 	config.windowWidth = 1336;
 	config.windowHeight = 768;
 	config.windowTitle = "Voxl Example";
+
+	Scene scene;
+	Entity* entity = scene.GetEntityManager()->CreateEntity();
+	scene.GetEntityManager()->DeleteEntity(entity);
 
 	Game game(config);
 	game.start();

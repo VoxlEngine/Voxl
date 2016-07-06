@@ -15,13 +15,28 @@
 * limitations under the License.
 */
 
-#pragma once
+#include "engine/game.hpp"
+
+#include <iostream>
+
+#include "math/vec4.hpp"
 
 namespace voxl {
-	class Config {
-	public:
-		int windowWidth;
-		int windowHeight;
-		const char *windowTitle;
-	};
+	namespace engine {
+		Game::Game(Config config) : renderer(config) {}
+
+		void Game::start() {
+			double lastTime = glfwGetTime();
+
+			while (!glfwWindowShouldClose(renderer.GetWindow())) {
+				double curTime = glfwGetTime();
+				double delta = curTime - lastTime;
+				glfwPollEvents();
+				lastTime = curTime;
+
+				renderer.Render();
+				std::cout << "FPS: " << 1000.0f / (delta * 1000.0f) << std::endl;
+			}
+		}
+	}
 }
